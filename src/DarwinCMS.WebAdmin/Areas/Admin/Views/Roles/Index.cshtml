@@ -1,0 +1,95 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Roles.RoleListViewModel
+@{
+    ViewData["Title"] = "Roles";
+}
+
+<h2>Roles</h2>
+
+<form asp-action="Index" method="get" class="row g-3 mb-3">
+    <div class="col-md-4">
+        <input type="text" name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="Search by name or display name..." />
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-outline-primary">
+            <i class="fas fa-search"></i> Filter
+        </button>
+    </div>
+</form>
+
+<a asp-action="Create" class="btn btn-primary mb-3">
+    <i class="fas fa-plus"></i> Add New Role
+</a>
+
+<table class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>
+                <a asp-action="Index" asp-route-sortColumn="Name" asp-route-sortDirection="@(Model.SortColumn == "Name" && Model.SortDirection == "asc" ? "desc" : "asc")">
+                    Name
+                    @if (Model.SortColumn == "Name")
+                    {
+                        <i class="fas fa-sort-@(Model.SortDirection == "asc" ? "up" : "down")"></i>
+                    }
+                </a>
+            </th>
+            <th>
+                <a asp-action="Index" asp-route-sortColumn="DisplayName" asp-route-sortDirection="@(Model.SortColumn == "DisplayName" && Model.SortDirection == "asc" ? "desc" : "asc")">
+                    Display Name
+                    @if (Model.SortColumn == "DisplayName")
+                    {
+                        <i class="fas fa-sort-@(Model.SortDirection == "asc" ? "up" : "down")"></i>
+                    }
+                </a>
+            </th>
+            <th>Status</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var role in Model.Roles)
+        {
+            <tr>
+                <td>@role.Name</td>
+                <td>@role.DisplayName</td>
+                <td>
+                    @if (role.IsActive)
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Inactive</span>
+                    }
+                </td>
+                <td>@role.Description</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@role.Id" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@role.Id" class="btn btn-sm btn-danger">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.TotalPages > 1)
+{
+    <nav>
+        <ul class="pagination">
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-searchTerm="@Model.SearchTerm" asp-route-sortColumn="@Model.SortColumn" asp-route-sortDirection="@Model.SortDirection">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

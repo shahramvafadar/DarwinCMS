@@ -1,0 +1,47 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Roles.DeleteRoleViewModel
+
+@{
+    ViewData["Title"] = "Delete Role";
+}
+
+<div class="container mt-4 d-flex justify-content-center">
+    <div class="card border-danger shadow-sm" style="max-width: 600px; width: 100%;">
+        <div class="card-body">
+            <h3 class="card-title text-danger mb-3">
+                <i class="fas fa-trash-alt me-2"></i> Delete Role
+            </h3>
+
+            <div class="alert alert-warning">
+                <strong>Warning:</strong> You are about to permanently delete the role
+                <strong>@Model.DisplayName</strong>.
+                <br />
+                This action <u>cannot be undone</u>. All user-role assignments will be removed.
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <div class="mb-3">
+                    <label class="form-label">Role Description</label>
+                    <div class="form-control-plaintext">@Model.Description</div>
+                </div>
+            }
+
+            <form asp-action="DeleteConfirmed" method="post">
+                <input type="hidden" asp-for="Id" />
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-1"></i> Confirm Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,16 @@
+<Project>
+	<PropertyGroup>
+		<!-- Metadata & Output -->
+		<Version>0.1.0</Version>
+		<Company>DarwinCMS</Company>
+		<Authors>Shahram Vafadar</Authors>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+		<!-- Output paths -->
+		<!--<BaseOutputPath>$(SolutionDir)build\</BaseOutputPath>
+		<BaseIntermediateOutputPath>$(SolutionDir)build\obj\</BaseIntermediateOutputPath>-->
+
+		<!-- Compiler strictness -->
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	</PropertyGroup>
+</Project>

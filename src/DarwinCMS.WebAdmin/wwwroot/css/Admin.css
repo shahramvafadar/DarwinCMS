@@ -1,0 +1,42 @@
+﻿/* Admin panel base styles */
+body {
+    background-color: #f8f9fa;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Top navbar brand */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.25rem;
+}
+
+/* Active sidebar link (if sidebar later added) */
+.nav-link.active {
+    background-color: #0d6efd;
+    color: #fff !important;
+    border-radius: 0.25rem;
+}
+
+/* Main container spacing */
+.container {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+}
+
+/* Dashboard boxes */
+.card.dashboard-box {
+    transition: box-shadow 0.2s ease;
+    border: 1px solid #dee2e6;
+}
+
+    .card.dashboard-box:hover {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+/* Footer (optional) */
+.footer {
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+    text-align: center;
+}

@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<LangVersion>preview</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Entity Framework Core packages -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="9.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.5">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.5">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<!-- Configuration binding (optional) -->
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.5" />
+
+		<!-- Microsoft Graph for Office365 integration -->
+		<PackageReference Include="Microsoft.Graph" Version="5.79.0" />
+
+		<!-- Logging -->
+		<PackageReference Include="Serilog" Version="4.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Project dependencies -->
+		<ProjectReference Include="..\DarwinCMS.Shared\DarwinCMS.Shared.csproj" />
+		<ProjectReference Include="..\DarwinCMS.Domain\DarwinCMS.Domain.csproj" />
+		<ProjectReference Include="..\DarwinCMS.Application\DarwinCMS.Application.csproj" />
+	</ItemGroup>
+
+</Project>

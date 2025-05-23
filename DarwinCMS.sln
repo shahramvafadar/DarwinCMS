@@ -1,0 +1,147 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35919.96
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{B86D3F39-8FA7-4F3F-AB44-ECE9C55BDE74}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{85EBF444-4465-4F81-8491-10941B4BA007}"
+	ProjectSection(SolutionItems) = preProject
+		Docs\architecture.md = Docs\architecture.md
+		Docs\cloud-strategy.md = Docs\cloud-strategy.md
+		Docs\getting-started.md = Docs\getting-started.md
+		Docs\modules.md = Docs\modules.md
+		Docs\office365-integration.md = Docs\office365-integration.md
+		Docs\README.md = Docs\README.md
+		Docs\solution-structure.md = Docs\solution-structure.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{77B65115-C20C-4F71-B5A1-D7A432A689E5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{1E95CA9D-C88E-49E1-93B4-98F94C5309D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarwinCMS.Domain", "src\DarwinCMS.Domain\DarwinCMS.Domain.csproj", "{4E94D452-21D6-48A1-B846-C73FF8ABF285}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarwinCMS.Application", "src\DarwinCMS.Application\DarwinCMS.Application.csproj", "{EC6E457F-E4C4-432F-BFE1-EFFE3D79406F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{285914C5-C4C9-4E05-8F21-FCD67AD77657}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarwinCMS.Infrastructure", "src\DarwinCMS.Infrastructure\DarwinCMS.Infrastructure.csproj", "{B5976A99-1446-4192-AC4A-85F34659A171}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarwinCMS.Web", "src\DarwinCMS.Web\DarwinCMS.Web.csproj", "{E77F584E-054B-416F-AA5A-E90D36AEF8EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarwinCMS.Tools", "src\DarwinCMS.Tools\DarwinCMS.Tools.csproj", "{6A047D53-3C61-4BAF-BD9E-51E1498E443C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Worker", "Worker", "{9AA5CEA1-EC29-49E4-82FA-B83645FF6FB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarwinCMS.Worker", "src\DarwinCMS.Worker\DarwinCMS.Worker.csproj", "{FCA5DEDB-2758-4215-8B4A-DFA34AB98122}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarwinCMS.UnitTests", "tests\DarwinCMS.UnitTests\DarwinCMS.UnitTests.csproj", "{74AEF56C-30F5-44B5-A5BA-7252B7EAFAAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarwinCMS.IntegrationTests", "tests\DarwinCMS.IntegrationTests\DarwinCMS.IntegrationTests.csproj", "{5BC136CE-2CEA-4734-A116-B0E6E902AAD4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{F4D4ED57-4398-4E93-A13D-254A63417144}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E30CAE43-0F49-44F4-98E9-03C222F8E9E3}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
+		CONTRIBUTING.md = CONTRIBUTING.md
+		Directory.Build.props = Directory.Build.props
+		global.json = global.json
+		LICENSE = LICENSE
+		README.md = README.md
+		SECURITY.md = SECURITY.md
+		SUPPORT.md = SUPPORT.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Temp", "Temp", "{48078A86-D34F-4B39-BAAE-40B07286EB06}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarwinCMS.WebAdmin", "src\DarwinCMS.WebAdmin\DarwinCMS.WebAdmin.csproj", "{B1CB3298-9FA8-4FC3-8BDC-AF1A766896FF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0B42DFDF-8A99-4937-BBF6-B16A3041BEB1} = {0B42DFDF-8A99-4937-BBF6-B16A3041BEB1}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarwinCMS.Shared", "src\DarwinCMS.Shared\DarwinCMS.Shared.csproj", "{0B42DFDF-8A99-4937-BBF6-B16A3041BEB1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarwinCMS.WebApi", "src\DarwinCMS.WebApi\DarwinCMS.WebApi.csproj", "{CFBCFDC5-292F-454A-9BC2-590ADFFDBC64}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0B42DFDF-8A99-4937-BBF6-B16A3041BEB1} = {0B42DFDF-8A99-4937-BBF6-B16A3041BEB1}
+		{B5976A99-1446-4192-AC4A-85F34659A171} = {B5976A99-1446-4192-AC4A-85F34659A171}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4E94D452-21D6-48A1-B846-C73FF8ABF285}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E94D452-21D6-48A1-B846-C73FF8ABF285}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E94D452-21D6-48A1-B846-C73FF8ABF285}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E94D452-21D6-48A1-B846-C73FF8ABF285}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC6E457F-E4C4-432F-BFE1-EFFE3D79406F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC6E457F-E4C4-432F-BFE1-EFFE3D79406F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC6E457F-E4C4-432F-BFE1-EFFE3D79406F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC6E457F-E4C4-432F-BFE1-EFFE3D79406F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5976A99-1446-4192-AC4A-85F34659A171}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5976A99-1446-4192-AC4A-85F34659A171}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5976A99-1446-4192-AC4A-85F34659A171}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5976A99-1446-4192-AC4A-85F34659A171}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E77F584E-054B-416F-AA5A-E90D36AEF8EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E77F584E-054B-416F-AA5A-E90D36AEF8EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E77F584E-054B-416F-AA5A-E90D36AEF8EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E77F584E-054B-416F-AA5A-E90D36AEF8EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A047D53-3C61-4BAF-BD9E-51E1498E443C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A047D53-3C61-4BAF-BD9E-51E1498E443C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A047D53-3C61-4BAF-BD9E-51E1498E443C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A047D53-3C61-4BAF-BD9E-51E1498E443C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCA5DEDB-2758-4215-8B4A-DFA34AB98122}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCA5DEDB-2758-4215-8B4A-DFA34AB98122}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCA5DEDB-2758-4215-8B4A-DFA34AB98122}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCA5DEDB-2758-4215-8B4A-DFA34AB98122}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74AEF56C-30F5-44B5-A5BA-7252B7EAFAAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74AEF56C-30F5-44B5-A5BA-7252B7EAFAAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74AEF56C-30F5-44B5-A5BA-7252B7EAFAAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74AEF56C-30F5-44B5-A5BA-7252B7EAFAAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BC136CE-2CEA-4734-A116-B0E6E902AAD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BC136CE-2CEA-4734-A116-B0E6E902AAD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BC136CE-2CEA-4734-A116-B0E6E902AAD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BC136CE-2CEA-4734-A116-B0E6E902AAD4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1CB3298-9FA8-4FC3-8BDC-AF1A766896FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1CB3298-9FA8-4FC3-8BDC-AF1A766896FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1CB3298-9FA8-4FC3-8BDC-AF1A766896FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1CB3298-9FA8-4FC3-8BDC-AF1A766896FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B42DFDF-8A99-4937-BBF6-B16A3041BEB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B42DFDF-8A99-4937-BBF6-B16A3041BEB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B42DFDF-8A99-4937-BBF6-B16A3041BEB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B42DFDF-8A99-4937-BBF6-B16A3041BEB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFBCFDC5-292F-454A-9BC2-590ADFFDBC64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFBCFDC5-292F-454A-9BC2-590ADFFDBC64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFBCFDC5-292F-454A-9BC2-590ADFFDBC64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFBCFDC5-292F-454A-9BC2-590ADFFDBC64}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4E94D452-21D6-48A1-B846-C73FF8ABF285} = {1E95CA9D-C88E-49E1-93B4-98F94C5309D6}
+		{EC6E457F-E4C4-432F-BFE1-EFFE3D79406F} = {1E95CA9D-C88E-49E1-93B4-98F94C5309D6}
+		{B5976A99-1446-4192-AC4A-85F34659A171} = {285914C5-C4C9-4E05-8F21-FCD67AD77657}
+		{E77F584E-054B-416F-AA5A-E90D36AEF8EA} = {B86D3F39-8FA7-4F3F-AB44-ECE9C55BDE74}
+		{6A047D53-3C61-4BAF-BD9E-51E1498E443C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{FCA5DEDB-2758-4215-8B4A-DFA34AB98122} = {9AA5CEA1-EC29-49E4-82FA-B83645FF6FB8}
+		{74AEF56C-30F5-44B5-A5BA-7252B7EAFAAE} = {77B65115-C20C-4F71-B5A1-D7A432A689E5}
+		{5BC136CE-2CEA-4734-A116-B0E6E902AAD4} = {77B65115-C20C-4F71-B5A1-D7A432A689E5}
+		{B1CB3298-9FA8-4FC3-8BDC-AF1A766896FF} = {B86D3F39-8FA7-4F3F-AB44-ECE9C55BDE74}
+		{0B42DFDF-8A99-4937-BBF6-B16A3041BEB1} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{CFBCFDC5-292F-454A-9BC2-590ADFFDBC64} = {B86D3F39-8FA7-4F3F-AB44-ECE9C55BDE74}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {760D193A-606C-44D8-89BF-20F2EF9AD62D}
+	EndGlobalSection
+EndGlobal

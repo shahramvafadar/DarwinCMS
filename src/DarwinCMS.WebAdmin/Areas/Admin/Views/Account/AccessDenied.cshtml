@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "Access Denied";
+    Layout = "~/Areas/Admin/Views/Shared/_MinimalLayout.cshtml";
+}
+
+<div class="text-center mt-5">
+    <h1 class="display-6 text-danger">
+        <i class="fas fa-ban me-2"></i> Access Denied
+    </h1>
+    <p class="lead mt-3">You do not have permission to access this page.</p>
+
+    <div class="mt-4">
+        <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-primary">
+            <i class="fas fa-home me-1"></i> Back to Dashboard
+        </a>
+    </div>
+</div>

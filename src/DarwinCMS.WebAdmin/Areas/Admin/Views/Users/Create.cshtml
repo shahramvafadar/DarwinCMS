@@ -1,0 +1,116 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Users.CreateUserViewModel
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4"><i class="fas fa-user-plus me-2"></i>Create New User</h2>
+
+    <div class="mx-auto" style="max-width: 600px;">
+        <form asp-action="Create" method="post">
+
+            <div class="mb-3">
+                <label asp-for="FirstName" class="form-label">First Name</label>
+                <input asp-for="FirstName" class="form-control" />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="LastName" class="form-label">Last Name</label>
+                <input asp-for="LastName" class="form-control" />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Username" class="form-label">Username</label>
+                <input asp-for="Username" class="form-control" />
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label">Password</label>
+                <input asp-for="Password" class="form-control" type="password" minlength="8" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label for="ConfirmPassword" class="form-label">Confirm Password</label>
+                <input name="ConfirmPassword" class="form-control" type="password" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Gender" class="form-label">Gender</label>
+                <select asp-for="Gender" class="form-select">
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+                <span asp-validation-for="Gender" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="BirthDate" class="form-label">Birth Date</label>
+                <input asp-for="BirthDate" class="form-control" type="date"
+                       min="@DateTime.UtcNow.AddYears(-130).ToString("yyyy-MM-dd")"
+                       max="@DateTime.UtcNow.ToString("yyyy-MM-dd")"
+                       value="@Model.BirthDate.ToString("yyyy-MM-dd")" />
+                <span asp-validation-for="BirthDate" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="MobilePhone" class="form-label">Mobile Phone</label>
+                <input asp-for="MobilePhone" class="form-control" />
+                <span asp-validation-for="MobilePhone" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="LanguageCode" class="form-label">Language Code</label>
+                <input asp-for="LanguageCode" class="form-control" />
+                <span asp-validation-for="LanguageCode" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ProfilePictureUrl" class="form-label">Profile Picture URL</label>
+                <input asp-for="ProfilePictureUrl" class="form-control" />
+                <span asp-validation-for="ProfilePictureUrl" class="text-danger"></span>
+            </div>
+
+            <div class="form-check mb-2">
+                <input asp-for="IsEmailConfirmed" class="form-check-input" />
+                <label asp-for="IsEmailConfirmed" class="form-check-label">Is Email Confirmed</label>
+            </div>
+
+            <div class="form-check mb-3">
+                <input asp-for="IsMobileConfirmed" class="form-check-input" />
+                <label asp-for="IsMobileConfirmed" class="form-check-label">Is Mobile Confirmed</label>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="RoleIds" class="form-label">Roles</label>
+                <select asp-for="RoleIds" class="form-select" asp-items="Model.Roles" multiple></select>
+                <span asp-validation-for="RoleIds" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to List
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Save User
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

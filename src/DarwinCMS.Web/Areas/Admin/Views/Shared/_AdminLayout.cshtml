@@ -1,0 +1,43 @@
+﻿@{
+    Layout = null;
+    var title = ViewData["Title"] ?? "Admin";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@title - Darwin CMS Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/admin.css" />
+
+    @RenderSection("Head", required: false)
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+        <a class="navbar-brand" href="@Url.Action("Index", "Dashboard", new { area = "Admin" })">Darwin CMS</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("Index", "ContentItem", new { area = "Admin" })">Content</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("Index", "User", new { area = "Admin" })">Users</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("Index", "Permission", new { area = "Admin" })">Permissions</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        @RenderBody()
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

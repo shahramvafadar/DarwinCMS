@@ -1,0 +1,65 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Auth.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = "~/Areas/Admin/Views/Shared/_MinimalLayout.cshtml";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow rounded">
+            <div class="card-body">
+                <h4 class="text-center mb-4">Admin Login</h4>
+
+                <form asp-action="Login" asp-controller="Account" asp-area="Admin" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="text-danger small mb-3">
+                            Invalid credentials. Please try again.
+                        </div>
+                    }
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-1"></i> Log in
+                        </button>
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <a asp-action="ForgotPassword" asp-controller="Account" class="small">
+                            Forgot your password?
+                        </a>
+                    </div>
+
+                    <hr class="my-4" />
+                    <div class="d-grid gap-2">
+                        <a asp-controller="ExternalAuth" asp-action="SignIn" asp-route-provider="Google" class="btn btn-danger">
+                            <i class="fab fa-google me-1"></i> Sign in with Google
+                        </a>
+                        <a asp-controller="ExternalAuth" asp-action="SignIn" asp-route-provider="Microsoft" class="btn btn-outline-secondary">
+                            <i class="fab fa-microsoft me-1"></i> Sign in with Microsoft
+                        </a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

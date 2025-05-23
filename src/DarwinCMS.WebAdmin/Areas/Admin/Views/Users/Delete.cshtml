@@ -1,0 +1,61 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Users.EditUserViewModel
+@{
+    ViewData["Title"] = "Delete User";
+}
+
+<div class="container mt-4 d-flex justify-content-center">
+    <div class="card border-danger shadow-sm" style="max-width: 700px; width: 100%;">
+        <div class="card-body">
+            <h3 class="text-danger mb-3">
+                <i class="fas fa-user-times me-2"></i> Delete User
+            </h3>
+
+            <div class="alert alert-danger">
+                <strong>Warning:</strong> This action is <u>irreversible</u>.
+                You are about to permanently delete the following user.
+            </div>
+
+            <table class="table table-sm table-bordered">
+                <tbody>
+                    <tr>
+                        <th style="width: 25%;">Username</th>
+                        <td>@Model.Username</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>@Model.Email</td>
+                    </tr>
+                    <tr>
+                        <th>Full Name</th>
+                        <td>@Model.FirstName @Model.LastName</td>
+                    </tr>
+                    <tr>
+                        <th>Confirmed Email</th>
+                        <td>@(Model.IsEmailConfirmed ? "Yes" : "No")</td>
+                    </tr>
+                    <tr>
+                        <th>Confirmed Mobile</th>
+                        <td>@(Model.IsMobileConfirmed ? "Yes" : "No")</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <form asp-action="DeleteConfirmed" method="post">
+                <input type="hidden" asp-for="Id" />
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-1"></i> Confirm Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

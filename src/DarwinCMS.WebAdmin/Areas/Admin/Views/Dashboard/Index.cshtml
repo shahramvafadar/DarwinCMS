@@ -1,0 +1,48 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    // Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1 class="mb-4">Admin Dashboard</h1>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card dashboard-box text-center">
+            <div class="card-body">
+                <h5 class="card-title">Users</h5>
+                <p class="card-text display-6 fw-bold">125</p>
+                <a href="/Admin/User" class="btn btn-outline-primary btn-sm">Manage</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card dashboard-box text-center">
+            <div class="card-body">
+                <h5 class="card-title">Roles</h5>
+                <p class="card-text display-6 fw-bold">8</p>
+                <a href="/Admin/Role" class="btn btn-outline-primary btn-sm">Manage</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card dashboard-box text-center">
+            <div class="card-body">
+                <h5 class="card-title">Content</h5>
+                <p class="card-text display-6 fw-bold">42</p>
+                <a href="/Admin/ContentItem" class="btn btn-outline-primary btn-sm">Manage</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card dashboard-box text-center">
+            <div class="card-body">
+                <h5 class="card-title">Permissions</h5>
+                <p class="card-text display-6 fw-bold">37</p>
+                <a href="/Admin/Permission" class="btn btn-outline-primary btn-sm">Manage</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,6 @@
+@DarwinCMS.WebApi_HostAddress = http://localhost:5167
+
+GET {{DarwinCMS.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
