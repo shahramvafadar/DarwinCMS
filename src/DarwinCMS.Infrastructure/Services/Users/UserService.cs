@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
+
 using DarwinCMS.Application.Abstractions.Repositories;
 using DarwinCMS.Application.DTOs.Users;
 using DarwinCMS.Application.Services.Users;
 using DarwinCMS.Domain.Entities;
 using DarwinCMS.Domain.ValueObjects;
 using DarwinCMS.Shared.Security;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace DarwinCMS.Infrastructure.Services.Users;
@@ -35,16 +37,13 @@ public class UserService : IUserService
         _mapper = mapper;
     }
 
-    /// <summary>
-    /// Creates a new user, hashes their password, assigns their roles, and saves the entity.
-    /// </summary>
+    /// <inheritdoc />
     public async Task<User> CreateAsync(CreateUserRequest request, Guid performedByUserId, CancellationToken cancellationToken = default)
     {
         var existing = await _userRepository.GetByUsernameOrEmailAsync(request.Username, request.Email, cancellationToken);
         if (existing != null)
             throw new InvalidOperationException("Username or Email is already taken.");
 
-        // Validate all role IDs
         var validRoles = await _roleRepository.GetAllActiveAsync(cancellationToken);
         var validRoleIds = validRoles.Select(r => r.Id).ToHashSet();
 
@@ -83,22 +82,15 @@ public class UserService : IUserService
         return user;
     }
 
-
-    /// <summary>
-    /// Retrieves a user entity by their unique identifier.
-    /// </summary>
+    /// <inheritdoc />
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => await _userRepository.GetByIdAsync(id, cancellationToken);
 
-    /// <summary>
-    /// Retrieves a user entity by their username.
-    /// </summary>
+    /// <inheritdoc />
     public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         => await _userRepository.GetByUsernameAsync(username, cancellationToken);
 
-    /// <summary>
-    /// Marks a user as inactive (soft-delete).
-    /// </summary>
+    /// <inheritdoc />
     public async Task DisableUserAsync(Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
@@ -110,9 +102,7 @@ public class UserService : IUserService
         await _userRepository.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Reactivates a previously disabled user.
-    /// </summary>
+    /// <inheritdoc />
     public async Task EnableUserAsync(Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
@@ -124,9 +114,7 @@ public class UserService : IUserService
         await _userRepository.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Updates a user's password and marks modification info.
-    /// </summary>
+    /// <inheritdoc />
     public async Task ChangePasswordAsync(Guid userId, string newPassword, Guid performedByUserId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
@@ -140,10 +128,7 @@ public class UserService : IUserService
         await _userRepository.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Retrieves a list of users with support for search, role filter, sorting and pagination.
-    /// Also enriches each result with their assigned role names.
-    /// </summary>
+    /// <inheritdoc />
     public async Task<UserListResultDto> GetUserListAsync(string? search, Guid? roleId, string? sortColumn, string? sortDirection, int skip, int take, CancellationToken cancellationToken = default)
     {
         var query = _userRepository.Query().AsNoTracking();
@@ -184,7 +169,11 @@ public class UserService : IUserService
         {
             var userDto = _mapper.Map<UserListDto>(user);
             var roles = await _userRoleRepository.GetByUserIdAsync(user.Id, null, cancellationToken);
-            userDto.RoleNames = roles.Select(r => r.Role?.DisplayName ?? r.Role?.Name ?? "").Distinct().ToList();
+            userDto.RoleNames = roles
+                .Where(r => r.Role != null)
+                .Select(r => r.Role!.DisplayName ?? r.Role.Name)
+                .Distinct()
+                .ToList();
             result.Add(userDto);
         }
 
@@ -195,9 +184,7 @@ public class UserService : IUserService
         };
     }
 
-    /// <summary>
-    /// Updates the user entity and replaces all existing role mappings with the provided ones.
-    /// </summary>
+    /// <inheritdoc />
     public async Task UpdateAsync(UpdateUserRequest request, Guid performedByUserId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(request.Id, cancellationToken)
@@ -226,9 +213,12 @@ public class UserService : IUserService
         user.SetModifiedBy(performedByUserId);
         _userRepository.Update(user);
 
-        var userRoles = await _userRoleRepository.GetByUserIdAsync(user.Id, null, cancellationToken);
-        foreach (var ur in userRoles)
+        var userRoles = await _userRoleRepository.GetByUserIdAsync(user.Id, null, cancellationToken)
+                ?? new List<UserRole>();
+
+        foreach (var ur in userRoles.Where(r => r != null))
             _userRoleRepository.Delete(ur);
+
 
         foreach (var roleId in request.RoleIds)
         {
@@ -238,9 +228,7 @@ public class UserService : IUserService
         await _userRepository.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Deletes a user and removes all associated role mappings.
-    /// </summary>
+    /// <inheritdoc />
     public async Task DeleteUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
@@ -254,9 +242,7 @@ public class UserService : IUserService
         await _userRepository.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Returns a list of RoleId GUIDs assigned to the user. Used for form population.
-    /// </summary>
+    /// <inheritdoc />
     public async Task<List<Guid>> GetUserPrimaryRoleIdsAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var roles = await _userRoleRepository.GetByUserIdAsync(userId, null, cancellationToken);

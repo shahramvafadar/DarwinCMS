@@ -15,135 +15,142 @@ namespace DarwinCMS.UnitTests.Application.Services;
 
 /// <summary>
 /// Unit tests for ContentItemService logic.
+/// Covers creation, retrieval, update, deletion, and filtering.
 /// </summary>
 public class ContentItemServiceTests
 {
     private readonly Mock<IContentItemRepository> _repositoryMock;
     private readonly IContentItemService _service;
 
+    /// <summary>
+    /// Initializes the test class and mocks.
+    /// </summary>
     public ContentItemServiceTests()
     {
         _repositoryMock = new Mock<IContentItemRepository>();
         _service = new ContentItemService(_repositoryMock.Object);
     }
 
+    /// <summary>
+    /// Should add a new content item and return its ID.
+    /// </summary>
     [Fact]
     public async Task CreateAsync_ShouldAddItem()
     {
-        // Arrange
         var item = CreateTestItem();
 
         _repositoryMock.Setup(r => r.AddAsync(item, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
-        // Act
+
         var result = await _service.CreateAsync(item);
 
-        // Assert
         result.Should().Be(item.Id);
         _repositoryMock.Verify(r => r.AddAsync(item, It.IsAny<CancellationToken>()), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Should return content item by ID when it exists.
+    /// </summary>
     [Fact]
     public async Task GetByIdAsync_ShouldReturnItem_WhenExists()
     {
-        // Arrange
         var item = CreateTestItem();
         _repositoryMock.Setup(r => r.GetByIdAsync(item.Id, It.IsAny<CancellationToken>())).ReturnsAsync(item);
 
-        // Act
         var result = await _service.GetByIdAsync(item.Id);
 
-        // Assert
         result.Should().NotBeNull();
         result?.Id.Should().Be(item.Id);
     }
 
+    /// <summary>
+    /// Should return null if item with given ID does not exist.
+    /// </summary>
     [Fact]
     public async Task GetByIdAsync_ShouldReturnNull_WhenNotFound()
     {
-        // Arrange
         var id = Guid.NewGuid();
         _repositoryMock.Setup(r => r.GetByIdAsync(id, It.IsAny<CancellationToken>())).ReturnsAsync((ContentItem?)null);
 
-        // Act
         var result = await _service.GetByIdAsync(id);
 
-        // Assert
         result.Should().BeNull();
     }
 
+    /// <summary>
+    /// Should return content item by slug and language when it exists.
+    /// </summary>
     [Fact]
     public async Task GetBySlugAsync_ShouldReturnItem_WhenExists()
     {
-        // Arrange
         var slug = "sample-content";
         var lang = "en";
         var item = CreateTestItem(slug);
         _repositoryMock.Setup(r => r.GetBySlugAsync(slug, lang, It.IsAny<CancellationToken>())).ReturnsAsync(item);
 
-        // Act
         var result = await _service.GetBySlugAsync(slug, lang);
 
-        // Assert
         result.Should().NotBeNull();
         result?.Slug.Value.Should().Be(slug);
     }
 
+    /// <summary>
+    /// Should return list of content items (filtered or all).
+    /// </summary>
     [Fact]
     public async Task GetAllAsync_ShouldReturnFilteredItems()
     {
-        // Arrange
         var items = new List<ContentItem>
         {
             CreateTestItem("one"),
             CreateTestItem("two")
         };
 
-        _repositoryMock.Setup(r => r.GetAllAsync(null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(items);
+        _repositoryMock.Setup(r => r.GetAllAsync(null, null, It.IsAny<CancellationToken>())).ReturnsAsync(items);
 
-        // Act
         var result = await _service.GetAllAsync();
 
-        // Assert
         result.Should().HaveCount(2);
     }
 
+    /// <summary>
+    /// Should update existing content item and persist changes.
+    /// </summary>
     [Fact]
     public async Task UpdateAsync_ShouldModifyItem()
     {
-        // Arrange
         var item = CreateTestItem();
         _repositoryMock.Setup(r => r.Update(item)).Verifiable();
         _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask).Verifiable();
 
-        // Act
         await _service.UpdateAsync(item);
 
-        // Assert
         _repositoryMock.Verify(r => r.Update(item), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Should delete the content item by ID if found.
+    /// </summary>
     [Fact]
     public async Task DeleteAsync_ShouldRemoveItem()
     {
-        // Arrange
         var item = CreateTestItem();
         _repositoryMock.Setup(r => r.GetByIdAsync(item.Id, It.IsAny<CancellationToken>())).ReturnsAsync(item);
         _repositoryMock.Setup(r => r.Delete(item)).Verifiable();
         _repositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask).Verifiable();
 
-        // Act
         await _service.DeleteAsync(item.Id);
 
-        // Assert
         _repositoryMock.Verify(r => r.Delete(item), Times.Once);
         _repositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Creates a sample ContentItem instance for use in tests.
+    /// </summary>
     private static ContentItem CreateTestItem(string slug = "sample-content")
     {
         return new ContentItem(

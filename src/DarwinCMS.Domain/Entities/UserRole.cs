@@ -77,4 +77,22 @@ public class UserRole : BaseEntity
         Module = module?.Trim();
         MarkAsModified();
     }
+
+    /// <summary>
+    /// Compares UserRole by UserId and RoleId
+    /// </summary>
+    public override bool Equals(object? obj)
+    {
+        if (obj is not UserRole other) return false;
+        return UserId == other.UserId && RoleId == other.RoleId;
+    }
+
+    /// <summary>
+    /// Returns hash code based on UserId and RoleId.
+    /// </summary>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(UserId, RoleId);
+    }
+
 }

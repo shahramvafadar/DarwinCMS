@@ -4,60 +4,58 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
+using AutoMapper;
+
 using DarwinCMS.Application.Abstractions.Repositories;
 using DarwinCMS.Application.Services.Roles;
 using DarwinCMS.Domain.Entities;
 using DarwinCMS.Infrastructure.Services.Roles;
+
 using FluentAssertions;
+
 using Moq;
+
 using Xunit;
 
 namespace DarwinCMS.UnitTests.Application.Services;
 
 /// <summary>
-/// Unit tests for RoleService.
+/// Unit tests for RoleService, focused on retrieval and deletion operations.
 /// </summary>
 public class RoleServiceTests
 {
     private readonly Mock<IRoleRepository> _roleRepositoryMock;
+    private readonly Mock<IUserRoleRepository> _userRoleRepositoryMock;
+    private readonly IMapper _mapper;
     private readonly IRoleService _roleService;
 
+    /// <summary>
+    /// Initializes all required mocks and service under test.
+    /// </summary>
     public RoleServiceTests()
     {
         _roleRepositoryMock = new Mock<IRoleRepository>();
-        _roleService = new RoleService(_roleRepositoryMock.Object);
+        _userRoleRepositoryMock = new Mock<IUserRoleRepository>();
+
+        var config = new MapperConfiguration(cfg => { /* Add mapping profiles if needed */ });
+        _mapper = config.CreateMapper();
+
+        _roleService = new RoleService(
+            _roleRepositoryMock.Object,
+            _userRoleRepositoryMock.Object,
+            _mapper);
     }
 
-    [Fact(DisplayName = "Should return all active roles")]
-    public async Task GetAllAsync_ShouldReturnRoles()
-    {
-        // Arrange: create fake list of roles
-        var roles = new List<Role>
-        {
-            new("Admin"),
-            new("Editor")
-        };
-
-        _roleRepositoryMock.Setup(x => x.GetAllActiveAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(roles);
-
-        // Act
-        var result = await _roleService.GetAllAsync();
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Should().HaveCount(2);
-        result.Select(r => r.Name).Should().Contain(new[] { "Admin", "Editor" });
-    }
-
+    /// <summary>
+    /// Should return role when found by ID.
+    /// </summary>
     [Fact(DisplayName = "Should return role by id")]
     public async Task GetByIdAsync_ShouldReturnRole()
     {
         // Arrange
-        var role = new Role("Support");
-
-        _roleRepositoryMock.Setup(x => x.GetByIdAsync(role.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(role);
+        var role = new Role("Support", Guid.NewGuid());
+        _roleRepositoryMock.Setup(x => x.GetByIdAsync(role.Id, It.IsAny<CancellationToken>())).ReturnsAsync(role);
 
         // Act
         var result = await _roleService.GetByIdAsync(role.Id);
@@ -67,14 +65,15 @@ public class RoleServiceTests
         result!.Name.Should().Be("Support");
     }
 
+    /// <summary>
+    /// Should return role when found by exact name.
+    /// </summary>
     [Fact(DisplayName = "Should return role by name")]
     public async Task GetByNameAsync_ShouldReturnRole()
     {
         // Arrange
-        var role = new Role("Manager");
-
-        _roleRepositoryMock.Setup(x => x.GetByNameAsync("Manager", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(role);
+        var role = new Role("Manager", Guid.NewGuid());
+        _roleRepositoryMock.Setup(x => x.GetByNameAsync("Manager", It.IsAny<CancellationToken>())).ReturnsAsync(role);
 
         // Act
         var result = await _roleService.GetByNameAsync("Manager");
@@ -84,18 +83,18 @@ public class RoleServiceTests
         result!.Name.Should().Be("Manager");
     }
 
+    /// <summary>
+    /// Should delete role if found.
+    /// </summary>
     [Fact(DisplayName = "Should delete role if exists")]
     public async Task DeleteAsync_ShouldCallRepository_WhenRoleFound()
     {
-        // Arrange: create role and assign ID using reflection
-        var role = new Role("Temp");
-
-        // EF Core restricts setting Id directly, so we use reflection for testing
+        // Arrange
+        var role = new Role("Temp", Guid.NewGuid());
         typeof(Role).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!
             .SetValue(role, Guid.NewGuid());
 
-        _roleRepositoryMock.Setup(x => x.GetByIdAsync(role.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(role);
+        _roleRepositoryMock.Setup(x => x.GetByIdAsync(role.Id, It.IsAny<CancellationToken>())).ReturnsAsync(role);
 
         // Act
         await _roleService.DeleteAsync(role.Id);
@@ -105,20 +104,23 @@ public class RoleServiceTests
         _roleRepositoryMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Fact(DisplayName = "Should do nothing if role not found")]
-    public async Task DeleteAsync_ShouldDoNothing_WhenRoleNotFound()
+    /// <summary>
+    /// Should throw if role is not found.
+    /// </summary>
+    [Fact(DisplayName = "Should throw if role is not found")]
+    public async Task DeleteAsync_ShouldThrow_WhenRoleNotFound()
     {
         // Arrange
         var id = Guid.NewGuid();
-
         _roleRepositoryMock.Setup(x => x.GetByIdAsync(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Role?)null);
 
         // Act
-        await _roleService.DeleteAsync(id);
+        var act = async () => await _roleService.DeleteAsync(id);
 
         // Assert
-        _roleRepositoryMock.Verify(x => x.Delete(It.IsAny<Role>()), Times.Never);
-        _roleRepositoryMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Role not found.");
     }
+
 }

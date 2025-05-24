@@ -4,43 +4,53 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using DarwinCMS.Application.Abstractions.Repositories;
 using DarwinCMS.Application.Services.Permissions;
 using DarwinCMS.Domain.Entities;
 using DarwinCMS.Infrastructure.Services.Permissions;
+
 using FluentAssertions;
+
 using Moq;
+
 using Xunit;
 
 namespace DarwinCMS.UnitTests.Application.Services;
 
 /// <summary>
-/// Unit tests for PermissionService.
+/// Unit tests for the PermissionService covering core CRUD behaviors.
 /// </summary>
 public class PermissionServiceTests
 {
     private readonly Mock<IPermissionRepository> _permissionRepositoryMock;
     private readonly IPermissionService _permissionService;
 
+    /// <summary>
+    /// Initializes mocks and service under test.
+    /// </summary>
     public PermissionServiceTests()
     {
         _permissionRepositoryMock = new Mock<IPermissionRepository>();
         _permissionService = new PermissionService(_permissionRepositoryMock.Object);
     }
 
+    /// <summary>
+    /// Should return all available permissions in the system.
+    /// </summary>
     [Fact(DisplayName = "Should return all permissions")]
     public async Task GetAllAsync_ShouldReturnPermissions()
     {
         // Arrange
         var list = new List<Permission>
         {
-            new("ManageUsers"),
-            new("EditContent")
+            new("ManageUsers", Guid.NewGuid()),
+            new("EditContent", Guid.NewGuid())
         };
 
-        _permissionRepositoryMock.Setup(x => x.GetAllAsync(null, It.IsAny<CancellationToken>()))
-                                            .ReturnsAsync(list);
-
+        _permissionRepositoryMock
+            .Setup(x => x.GetAllAsync(null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(list);
 
         // Act
         var result = await _permissionService.GetAllAsync();
@@ -51,13 +61,17 @@ public class PermissionServiceTests
         result.Select(p => p.Name).Should().Contain(new[] { "ManageUsers", "EditContent" });
     }
 
+    /// <summary>
+    /// Should return a permission by ID when it exists.
+    /// </summary>
     [Fact(DisplayName = "Should return permission by id")]
     public async Task GetByIdAsync_ShouldReturnPermission()
     {
         // Arrange
-        var permission = new Permission("ViewDashboard");
+        var permission = new Permission("ViewDashboard", Guid.NewGuid());
 
-        _permissionRepositoryMock.Setup(x => x.GetByIdAsync(permission.Id, It.IsAny<CancellationToken>()))
+        _permissionRepositoryMock
+            .Setup(x => x.GetByIdAsync(permission.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(permission);
 
         // Act
@@ -68,13 +82,17 @@ public class PermissionServiceTests
         result!.Name.Should().Be("ViewDashboard");
     }
 
+    /// <summary>
+    /// Should return a permission by its unique name.
+    /// </summary>
     [Fact(DisplayName = "Should return permission by name")]
     public async Task GetByNameAsync_ShouldReturnPermission()
     {
         // Arrange
-        var permission = new Permission("ExportData");
+        var permission = new Permission("ExportData", Guid.NewGuid());
 
-        _permissionRepositoryMock.Setup(x => x.GetByNameAsync("ExportData", It.IsAny<CancellationToken>()))
+        _permissionRepositoryMock
+            .Setup(x => x.GetByNameAsync("ExportData", It.IsAny<CancellationToken>()))
             .ReturnsAsync(permission);
 
         // Act
@@ -85,16 +103,20 @@ public class PermissionServiceTests
         result!.Name.Should().Be("ExportData");
     }
 
+    /// <summary>
+    /// Should delete a permission if found by ID.
+    /// </summary>
     [Fact(DisplayName = "Should delete permission if found")]
     public async Task DeleteAsync_ShouldCallDelete_WhenPermissionFound()
     {
-        // Arrange: create a permission and assign ID using reflection
-        var permission = new Permission("TempDelete");
+        // Arrange
+        var permission = new Permission("TempDelete", Guid.NewGuid());
 
         typeof(Permission).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!
             .SetValue(permission, Guid.NewGuid());
 
-        _permissionRepositoryMock.Setup(x => x.GetByIdAsync(permission.Id, It.IsAny<CancellationToken>()))
+        _permissionRepositoryMock
+            .Setup(x => x.GetByIdAsync(permission.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(permission);
 
         // Act
@@ -105,13 +127,17 @@ public class PermissionServiceTests
         _permissionRepositoryMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Should not attempt deletion if permission does not exist.
+    /// </summary>
     [Fact(DisplayName = "Should not call delete if permission not found")]
     public async Task DeleteAsync_ShouldDoNothing_WhenNotFound()
     {
         // Arrange
         var id = Guid.NewGuid();
 
-        _permissionRepositoryMock.Setup(x => x.GetByIdAsync(id, It.IsAny<CancellationToken>()))
+        _permissionRepositoryMock
+            .Setup(x => x.GetByIdAsync(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Permission?)null);
 
         // Act
