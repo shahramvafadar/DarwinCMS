@@ -5,6 +5,7 @@ using DarwinCMS.Application.DTOs.Users;
 using DarwinCMS.Application.Services.Users;
 using DarwinCMS.Domain.Entities;
 using DarwinCMS.Domain.ValueObjects;
+using DarwinCMS.Shared.Exceptions;
 using DarwinCMS.Shared.Security;
 
 using Microsoft.EntityFrameworkCore;
@@ -42,13 +43,13 @@ public class UserService : IUserService
     {
         var existing = await _userRepository.GetByUsernameOrEmailAsync(request.Username, request.Email, cancellationToken);
         if (existing != null)
-            throw new InvalidOperationException("Username or Email is already taken.");
+            throw new BusinessRuleException("Username or Email is already taken.");
 
         var validRoles = await _roleRepository.GetAllActiveAsync(cancellationToken);
         var validRoleIds = validRoles.Select(r => r.Id).ToHashSet();
 
         if (!request.RoleIds.All(id => validRoleIds.Contains(id)))
-            throw new InvalidOperationException("One or more selected roles are invalid.");
+            throw new BusinessRuleException("One or more selected roles are invalid.");
 
         var hashedPassword = PasswordHasher.Hash(request.Password);
 
@@ -94,7 +95,7 @@ public class UserService : IUserService
     public async Task DisableUserAsync(Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new InvalidOperationException("User not found.");
+            ?? throw new BusinessRuleException("User not found.");
 
         user.Deactivate();
         user.SetModifiedBy(performedByUserId);
@@ -106,7 +107,7 @@ public class UserService : IUserService
     public async Task EnableUserAsync(Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new InvalidOperationException("User not found.");
+            ?? throw new BusinessRuleException("User not found.");
 
         user.Activate();
         user.SetModifiedBy(performedByUserId);
@@ -118,7 +119,7 @@ public class UserService : IUserService
     public async Task ChangePasswordAsync(Guid userId, string newPassword, Guid performedByUserId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new InvalidOperationException("User not found.");
+            ?? throw new BusinessRuleException("User not found.");
 
         var hash = PasswordHasher.Hash(newPassword);
         user.SetPasswordHash(hash);
@@ -188,7 +189,7 @@ public class UserService : IUserService
     public async Task UpdateAsync(UpdateUserRequest request, Guid performedByUserId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(request.Id, cancellationToken)
-            ?? throw new InvalidOperationException("User not found.");
+            ?? throw new BusinessRuleException("User not found.");
 
         user.SetUsername(request.Username);
         user.SetEmail(new Email(request.Email));
@@ -232,7 +233,10 @@ public class UserService : IUserService
     public async Task DeleteUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
-            ?? throw new InvalidOperationException("User not found.");
+            ?? throw new BusinessRuleException("User not found.");
+
+        if (user.IsSystem)
+            throw new BusinessRuleException("System users cannot be deleted.");
 
         var userRoles = await _userRoleRepository.GetByUserIdAsync(userId, null, cancellationToken);
         foreach (var ur in userRoles)
@@ -241,6 +245,7 @@ public class UserService : IUserService
         _userRepository.Delete(user);
         await _userRepository.SaveChangesAsync(cancellationToken);
     }
+
 
     /// <inheritdoc />
     public async Task<List<Guid>> GetUserPrimaryRoleIdsAsync(Guid userId, CancellationToken cancellationToken = default)

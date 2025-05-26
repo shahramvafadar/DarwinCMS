@@ -37,6 +37,23 @@ namespace DarwinCMS.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PasswordResetTokens",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Token = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsUsed = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PasswordResetTokens", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Permissions",
                 columns: table => new
                 {
@@ -47,6 +64,7 @@ namespace DarwinCMS.Infrastructure.Migrations
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ModifiedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsSystem = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -64,6 +82,7 @@ namespace DarwinCMS.Infrastructure.Migrations
                     DisplayName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsSystem = table.Column<bool>(type: "bit", nullable: false),
                     Module = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     DisplayOrder = table.Column<int>(type: "int", nullable: true),
                     CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -94,6 +113,7 @@ namespace DarwinCMS.Infrastructure.Migrations
                     LanguageCode = table.Column<string>(type: "nvarchar(2)", maxLength: 2, nullable: false),
                     ProfilePictureUrl = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsSystem = table.Column<bool>(type: "bit", nullable: false),
                     LastLoginAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ModifiedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -166,6 +186,17 @@ namespace DarwinCMS.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_PasswordResetTokens_Email_IsUsed",
+                table: "PasswordResetTokens",
+                columns: new[] { "Email", "IsUsed" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PasswordResetTokens_Token",
+                table: "PasswordResetTokens",
+                column: "Token",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Permissions_Name",
                 table: "Permissions",
                 column: "Name",
@@ -213,6 +244,9 @@ namespace DarwinCMS.Infrastructure.Migrations
         {
             migrationBuilder.DropTable(
                 name: "ContentItems");
+
+            migrationBuilder.DropTable(
+                name: "PasswordResetTokens");
 
             migrationBuilder.DropTable(
                 name: "RolePermissions");

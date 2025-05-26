@@ -1,0 +1,40 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Permissions.PermissionListViewModel
+
+@{
+    ViewData["Title"] = "Delete Permission";
+}
+
+<h1 class="mb-4">Delete Permission</h1>
+
+@if (Model.IsSystem)
+{
+    <div class="alert alert-warning">
+        <i class="fas fa-lock"></i> This permission is system-critical and cannot be deleted.
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to List
+    </a>
+}
+else
+{
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="alert alert-danger">
+            <strong>Warning:</strong> Are you sure you want to permanently delete the following permission?
+            <ul>
+                <li><strong>Name:</strong> @Model.Name</li>
+                <li><strong>Display Name:</strong> @Model.DisplayName</li>
+            </ul>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-check-circle me-1"></i> Yes, Delete Permanently
+            </button>
+        </div>
+    </form>
+}

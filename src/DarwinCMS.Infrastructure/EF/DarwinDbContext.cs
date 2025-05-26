@@ -42,11 +42,6 @@ public class DarwinDbContext : DbContext
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     /// <summary>
-    /// Gets the content items (pages, blog posts, etc.).
-    /// </summary>
-    public DbSet<ContentItem> ContentItems => Set<ContentItem>();
-
-    /// <summary>
     /// Creates a new instance of the <see cref="DarwinDbContext"/> class using the specified options.
     /// </summary>
     /// <param name="options">The EF Core options passed by dependency injection.</param>

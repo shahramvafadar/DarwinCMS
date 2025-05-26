@@ -1,14 +1,17 @@
 ﻿using DarwinCMS.Application.Services.Auth;
 using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Auth;
-
+using DarwinCMS.WebAdmin.Infrastructure.Security;
+using DarwinCMS.WebAdmin.Infrastructure.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DarwinCMS.WebAdmin.Areas.Admin.Controllers;
 
-/// <summary>
+/// 
 /// Handles admin login, logout, password recovery, and access control.
-/// </summary>
+/// 
 [Area("Admin")]
+[Route("Admin")]
+[AllowAnonymousPermissions]
 public class AccountController : Controller
 {
     private readonly ILoginService _loginService;
@@ -17,8 +20,6 @@ public class AccountController : Controller
     /// <summary>
     /// Creates a new instance of the AccountController.
     /// </summary>
-    /// <param name="loginService">Service used to handle login and logout operations.</param>
-    /// <param name="passwordResetService">Service used to generate and validate password reset tokens.</param>
     public AccountController(
         ILoginService loginService,
         IPasswordResetService passwordResetService)
@@ -30,8 +31,7 @@ public class AccountController : Controller
     /// <summary>
     /// Displays the login form.
     /// </summary>
-    /// <param name="returnUrl">The URL to redirect to after login.</param>
-    [HttpGet]
+    [HttpGet("Login")]
     public IActionResult Login(string? returnUrl = null)
     {
         var model = new LoginViewModel
@@ -44,8 +44,7 @@ public class AccountController : Controller
     /// <summary>
     /// Processes the login form and performs authentication.
     /// </summary>
-    /// <param name="model">Login form data.</param>
-    [HttpPost]
+    [HttpPost("Login")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model)
     {
@@ -68,7 +67,7 @@ public class AccountController : Controller
     /// <summary>
     /// Logs the user out and ends the session.
     /// </summary>
-    [HttpGet]
+    [HttpGet("Logout")]
     public async Task<IActionResult> Logout()
     {
         await _loginService.LogoutAsync();
@@ -78,7 +77,7 @@ public class AccountController : Controller
     /// <summary>
     /// Displays the "access denied" page when the user lacks permissions.
     /// </summary>
-    [HttpGet]
+    [HttpGet("AccessDenied")]
     public IActionResult AccessDenied()
     {
         return View();
@@ -87,7 +86,7 @@ public class AccountController : Controller
     /// <summary>
     /// Displays the form to initiate a password reset request.
     /// </summary>
-    [HttpGet]
+    [HttpGet("ForgotPassword")]
     public IActionResult ForgotPassword()
     {
         return View();
@@ -96,8 +95,7 @@ public class AccountController : Controller
     /// <summary>
     /// Handles forgot password form submissions and sends a reset link.
     /// </summary>
-    /// <param name="model">Forgot password form input.</param>
-    [HttpPost]
+    [HttpPost("ForgotPassword")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
     {
@@ -120,14 +118,14 @@ public class AccountController : Controller
             Console.WriteLine($"[DEBUG] Reset Link: {resetLink}");
         }
 
-        TempData["Message"] = "If the email is valid, a reset link will be sent.";
+        this.AddSuccess("If the email is valid, a reset link will be sent.");
         return RedirectToAction("ForgotPasswordConfirmation");
     }
 
     /// <summary>
     /// Displays confirmation that password reset email was sent.
     /// </summary>
-    [HttpGet]
+    [HttpGet("ForgotPasswordConfirmation")]
     public IActionResult ForgotPasswordConfirmation()
     {
         return View();
@@ -136,9 +134,7 @@ public class AccountController : Controller
     /// <summary>
     /// Displays the form to reset the user's password using a token.
     /// </summary>
-    /// <param name="token">The unique password reset token.</param>
-    /// <param name="email">The user's email address.</param>
-    [HttpGet]
+    [HttpGet("ResetPassword")]
     public IActionResult ResetPassword(string token, string email)
     {
         var model = new ResetPasswordViewModel
@@ -153,8 +149,7 @@ public class AccountController : Controller
     /// <summary>
     /// Handles submission of the reset password form and updates the password.
     /// </summary>
-    /// <param name="model">Reset password form data.</param>
-    [HttpPost]
+    [HttpPost("ResetPassword")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
     {
@@ -179,7 +174,9 @@ public class AccountController : Controller
         await _loginService.UpdateUserAsync(user);
         await _passwordResetService.InvalidateTokenAsync(token);
 
-        TempData["Message"] = "Your password has been successfully reset.";
+        this.AddSuccess("Your password has been successfully reset.");
         return RedirectToAction("Login");
     }
+
 }
+

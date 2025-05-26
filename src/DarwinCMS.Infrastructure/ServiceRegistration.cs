@@ -1,11 +1,16 @@
-﻿using DarwinCMS.Application.Services.Auth;
+﻿using DarwinCMS.Application.Abstractions.Repositories;
+using DarwinCMS.Application.Services.Auth;
 using DarwinCMS.Application.Services.Common;
+using DarwinCMS.Application.Services.Permissions;
 using DarwinCMS.Application.Services.Roles;
 using DarwinCMS.Application.Services.Users;
+using DarwinCMS.Infrastructure.Repositories;
 using DarwinCMS.Infrastructure.Services.Auth;
 using DarwinCMS.Infrastructure.Services.Common;
+using DarwinCMS.Infrastructure.Services.Permissions;
 using DarwinCMS.Infrastructure.Services.Roles;
 using DarwinCMS.Infrastructure.Services.Users;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -30,12 +35,18 @@ public static class ServiceRegistration
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IPasswordResetService, PasswordResetService>();
         services.AddScoped<IEmailSender, DebugEmailSender>();
+        services.AddScoped<IPermissionService, PermissionService>();
 
+        // === Core repositories ===
+        services.AddScoped<IPageRepository, PageRepository>();
+        services.AddScoped<IMenuRepository, MenuRepository>();
+        services.AddScoped<IMenuItemRepository, MenuItemRepository>();
+        services.AddScoped<ISiteSettingRepository, SiteSettingRepository>();
+        services.AddScoped<IMediaFileRepository, MediaFileRepository>();
 
         // === Future modular services can be registered here ===
         // Example:
         // services.AddScoped<IContentItemService, ContentItemService>();
-        // services.AddScoped<IPermissionService, PermissionService>();
 
         return services;
     }

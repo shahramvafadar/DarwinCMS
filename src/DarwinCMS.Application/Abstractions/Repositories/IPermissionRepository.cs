@@ -3,42 +3,27 @@
 namespace DarwinCMS.Application.Abstractions.Repositories;
 
 /// <summary>
-/// Contract for managing permission-related operations.
+/// Repository interface for accessing and modifying Permission entities.
 /// </summary>
-public interface IPermissionRepository
+public interface IPermissionRepository : IRepository<Permission>
 {
     /// <summary>
-    /// Gets a permission by its unique identifier.
-    /// </summary>
-    Task<Permission?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a permission by its unique name.
-    /// </summary>
-    Task<Permission?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Lists all permissions, optionally filtered by module.
+    /// Returns all permissions optionally filtered by module name.
     /// </summary>
     Task<List<Permission>> GetAllAsync(string? module = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Adds a new permission to the repository.
+    /// Returns a permission by internal name.
     /// </summary>
-    Task AddAsync(Permission permission, CancellationToken cancellationToken = default);
+    Task<Permission?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Marks the permission entity as modified.
+    /// Executes the query and returns number of matching items.
     /// </summary>
-    void Update(Permission permission);
+    Task<int> CountAsync(IQueryable<Permission> query, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes a permission from the store.
+    /// Executes the query and returns the results as a list.
     /// </summary>
-    void Delete(Permission permission);
-
-    /// <summary>
-    /// Persists changes to the database.
-    /// </summary>
-    Task SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<List<Permission>> ToListAsync(IQueryable<Permission> query, CancellationToken cancellationToken = default);
 }

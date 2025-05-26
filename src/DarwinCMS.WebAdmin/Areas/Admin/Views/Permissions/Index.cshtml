@@ -1,0 +1,85 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Permissions.PermissionIndexViewModel
+
+@{
+    ViewData["Title"] = "Permissions";
+    var sortIcon = (string column) => Model.SortColumn == column
+        ? (Model.SortDirection == "asc" ? "fa-sort-up" : "fa-sort-down")
+        : "fa-sort";
+}
+
+<h1 class="mb-4">Permissions</h1>
+
+<form method="get" asp-action="Index" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="Search by name or display name" />
+        <button class="btn btn-outline-secondary" type="submit">
+            <i class="fas fa-search"></i>
+        </button>
+    </div>
+</form>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th>
+                <a asp-action="Index" asp-route-searchTerm="@Model.SearchTerm" asp-route-sortColumn="Name" asp-route-sortDirection="@(Model.SortColumn == "Name" && Model.SortDirection == "asc" ? "desc" : "asc")">
+                    Name <i class="fas @sortIcon("Name")"></i>
+                </a>
+            </th>
+            <th>
+                <a asp-action="Index" asp-route-searchTerm="@Model.SearchTerm" asp-route-sortColumn="DisplayName" asp-route-sortDirection="@(Model.SortColumn == "DisplayName" && Model.SortDirection == "asc" ? "desc" : "asc")">
+                    Display Name <i class="fas @sortIcon("DisplayName")"></i>
+                </a>
+            </th>
+            <th class="text-center">System</th>
+            <th class="text-end">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Permissions)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.DisplayName</td>
+                <td class="text-center">
+                    @if (item.IsSystem)
+                    {
+                        <i class="fas fa-lock text-secondary" title="System permission"></i>
+                    }
+                </td>
+                <td class="text-end">
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    @if (!item.IsSystem)
+                    {
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<nav>
+    <ul class="pagination justify-content-center">
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            <li class="page-item @(i == Model.CurrentPage ? "active" : null)">
+                <a class="page-link" asp-action="Index"
+                   asp-route-page="@i"
+                   asp-route-searchTerm="@Model.SearchTerm"
+                   asp-route-sortColumn="@Model.SortColumn"
+                   asp-route-sortDirection="@Model.SortDirection">
+                    @i
+                </a>
+            </li>
+        }
+    </ul>
+</nav>
+
+<a asp-action="Create" class="btn btn-primary">
+    <i class="fas fa-plus"></i> New Permission
+</a>

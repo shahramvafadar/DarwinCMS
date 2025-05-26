@@ -1,8 +1,12 @@
 ﻿using DarwinCMS.Application.Services.Auth;
 using DarwinCMS.Application.Services.AccessControl;
+using DarwinCMS.Application.Services.Permissions;
+using DarwinCMS.Infrastructure.Services.Permissions;
+
 using DarwinCMS.WebAdmin.Infrastructure.Security;
 using DarwinCMS.WebAdmin.Mapping;
 using DarwinCMS.WebAdmin.Services.Auth;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +41,7 @@ public static class ServiceRegistration
 
         // Register AutoMapper with profiles defined in the WebAdmin layer
         services.AddAutoMapper(typeof(AdminMapperProfile).Assembly);
+
 
         return services;
     }

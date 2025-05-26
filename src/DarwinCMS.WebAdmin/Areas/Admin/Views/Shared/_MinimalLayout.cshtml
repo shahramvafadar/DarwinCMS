@@ -23,21 +23,8 @@
 </head>
 <body>
     <main class="container py-4">
-        <!-- Alert section -->
-        @if (TempData["SuccessMessage"] is string success)
-        {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i> @success
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        }
-        @if (TempData["ErrorMessage"] is string error)
-        {
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i> @error
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        }
+        <!-- Centralized error/warning/success messages -->
+        @await Html.PartialAsync("_UiMessage", ViewData["Messages"] as List<DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared.UiMessage> ?? new())
 
         @RenderBody()
     </main>

@@ -1,19 +1,25 @@
-﻿using DarwinCMS.Infrastructure;
+﻿using System.Globalization;
+
+using DarwinCMS.Infrastructure;
+using DarwinCMS.Infrastructure.EF;
+using DarwinCMS.Infrastructure.Seeders;
 using DarwinCMS.WebAdmin.Infrastructure;
 using DarwinCMS.WebAdmin.Infrastructure.Middleware;
 using DarwinCMS.WebAdmin.Infrastructure.Modules;
+using DarwinCMS.WebAdmin.Infrastructure.Security;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
-
-using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // === Dependency Injection Configuration ===
 
 // Add MVC (Controllers + Views) and Razor Pages support
-var mvcBuilder = builder.Services.AddControllersWithViews();
+var mvcBuilder = builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<AdminAccessEnforcerFilter>();
+});
 builder.Services.AddRazorPages();
 
 // Register shared infrastructure services (EF Core, repositories, etc.)
@@ -30,15 +36,13 @@ builder.Services.AddCors(options =>
     options.AddPolicy("DefaultCors", policy =>
     {
         policy
-            .AllowAnyOrigin()      // You can override this via appsettings.{Environment}.json
+            .AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod();
-        // .AllowCredentials(); // Only enable if using WithOrigins(...)
     });
 });
 
 // === Authentication & External OAuth ===
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -46,33 +50,26 @@ builder.Services.AddAuthentication(options =>
 })
 .AddCookie(options =>
 {
-    // These paths are used by login/logout flows in the Admin area
-    options.LoginPath = "/Admin/Account/Login";
-    options.LogoutPath = "/Admin/Account/Logout";
-    options.AccessDeniedPath = "/Admin/Account/AccessDenied";
-
-    // Set cookie expiration (extendable via sliding expiration logic)
+    options.LoginPath = "/Admin/Login";
+    options.LogoutPath = "/Admin/Logout";
+    options.AccessDeniedPath = "/Admin/AccessDenied";
     options.ExpireTimeSpan = TimeSpan.FromHours(2);
-
-    // Required for cross-site OAuth flow (Google, Microsoft)
-    // Allows secure login even if WebAdmin is running on a subdomain (e.g., admin.example.com)
     options.Cookie.SameSite = SameSiteMode.None;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Cookie only sent via HTTPS
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.HttpOnly = true;
     options.Cookie.Name = "DarwinAdminAuth";
-    // Do NOT set Cookie.Domain → Let the environment determine it dynamically
 })
 .AddGoogle("Google", options =>
 {
     options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "your-google-client-id";
     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "your-google-client-secret";
-    options.CallbackPath = "/signin-google"; // OAuth callback endpoint
+    options.CallbackPath = "/signin-google";
 })
 .AddMicrosoftAccount("Microsoft", options =>
 {
     options.ClientId = builder.Configuration["Authentication:Microsoft:ClientId"] ?? "your-ms-client-id";
     options.ClientSecret = builder.Configuration["Authentication:Microsoft:ClientSecret"] ?? "your-ms-client-secret";
-    options.CallbackPath = "/signin-microsoft"; // OAuth callback endpoint
+    options.CallbackPath = "/signin-microsoft";
 });
 
 // === Pluggable Module Support (Controllers, Views, Static Content) ===
@@ -100,53 +97,48 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.SameSite = SameSiteMode.Lax; // Suitable for session without cross-domain involvement
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 // === Build Application ===
 var app = builder.Build();
 
+// === Apply initial seed data for permissions, roles, and admin user ===
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<DarwinDbContext>();
+    await InitialSystemDataSeeder.SeedAsync(dbContext);
+}
+
+
 // === Middleware Pipeline Configuration ===
 
-// Apply localization preferences (e.g., culture switch per user)
 app.UseRequestLocalization();
-
-// Enable global CORS policy (configurable per environment)
 app.UseCors("DefaultCors");
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage(); // Dev-friendly exception page
+    app.UseDeveloperExceptionPage();
 }
 else
 {
-    // Custom global error handler (logs + returns friendly UI)
     app.UseMiddleware<GlobalExceptionMiddleware>();
 }
 
-// Serve static files from wwwroot and module paths
 app.UseStaticFiles();
-
-// Enable routing, sessions, and authentication/authorization
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
 // === Routing Configuration ===
-
-// Area-aware routing for Admin UI
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 
-// Default fallback routing (non-area)
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Enable Razor Pages (used for partial UIs or module UIs)
 app.MapRazorPages();
-
-// === Start the Application ===
 app.Run();

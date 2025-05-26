@@ -4,18 +4,23 @@ using DarwinCMS.Application.DTOs.Users;
 using DarwinCMS.Application.Services.AccessControl;
 using DarwinCMS.Application.Services.Roles;
 using DarwinCMS.Application.Services.Users;
+using DarwinCMS.Shared.Exceptions;
+using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared;
 using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Users;
+using DarwinCMS.WebAdmin.Infrastructure.Helpers;
+using DarwinCMS.WebAdmin.Infrastructure.Security;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DarwinCMS.WebAdmin.Areas.Admin.Controllers;
 
-/// <summary>
+/// 
 /// Controller responsible for managing user accounts in the admin area,
 /// including listing, creating, editing, and deleting users.
-/// </summary>
+/// 
 [Area("Admin")]
+[HasPermission("manage_users")]
 public class UsersController : Controller
 {
     private readonly IUserService _userService;
@@ -26,10 +31,6 @@ public class UsersController : Controller
     /// <summary>
     /// Initializes a new instance of the <see cref="UsersController"/> class.
     /// </summary>
-    /// <param name="userService">User management service.</param>
-    /// <param name="roleService">Role lookup service.</param>
-    /// <param name="currentUser">Current authenticated user context.</param>
-    /// <param name="mapper">AutoMapper instance used for mapping DTOs.</param>
     public UsersController(
         IUserService userService,
         IRoleService roleService,
@@ -107,11 +108,19 @@ public class UsersController : Controller
             return View(model);
         }
 
-        var request = _mapper.Map<CreateUserRequest>(model);
-        await _userService.CreateAsync(request, _currentUser.UserId ?? Guid.Empty);
-
-        TempData["SuccessMessage"] = "User created successfully.";
-        return RedirectToAction(nameof(Index));
+        try
+        {
+            var request = _mapper.Map<CreateUserRequest>(model);
+            await _userService.CreateAsync(request, _currentUser.UserId ?? Guid.Empty);
+            this.AddSuccess("User created successfully.");
+            return RedirectToAction(nameof(Index));
+        }
+        catch (BusinessRuleException ex)
+        {
+            this.AddError(ex.Message);
+            model.Roles = await GetRoleSelectListAsync();
+            return View(model);
+        }
     }
 
     /// <summary>
@@ -144,11 +153,19 @@ public class UsersController : Controller
             return View(model);
         }
 
-        var request = _mapper.Map<UpdateUserRequest>(model);
-        await _userService.UpdateAsync(request, _currentUser.UserId ?? Guid.Empty);
-
-        TempData["SuccessMessage"] = "User updated successfully.";
-        return RedirectToAction(nameof(Index));
+        try
+        {
+            var request = _mapper.Map<UpdateUserRequest>(model);
+            await _userService.UpdateAsync(request, _currentUser.UserId ?? Guid.Empty);
+            this.AddSuccess("User updated successfully.");
+            return RedirectToAction(nameof(Index));
+        }
+        catch (BusinessRuleException ex)
+        {
+            this.AddError(ex.Message);
+            model.Roles = await GetRoleSelectListAsync();
+            return View(model);
+        }
     }
 
     /// <summary>
@@ -176,15 +193,22 @@ public class UsersController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {
-        await _userService.DeleteUserAsync(id);
-        TempData["SuccessMessage"] = "User deleted successfully.";
+        try
+        {
+            await _userService.DeleteUserAsync(id);
+            this.AddSuccess("User deleted successfully.");
+        }
+        catch (BusinessRuleException ex)
+        {
+            this.AddError(ex.Message);
+        }
+
         return RedirectToAction(nameof(Index));
     }
 
     /// <summary>
     /// Generates a SelectList of roles for form dropdowns.
     /// </summary>
-    /// <returns>List of SelectListItem representing roles.</returns>
     private async Task<List<SelectListItem>> GetRoleSelectListAsync()
     {
         var roles = await _roleService.GetAllRolesAsync();
@@ -194,4 +218,6 @@ public class UsersController : Controller
             Text = r.Name
         }).ToList();
     }
+
 }
+

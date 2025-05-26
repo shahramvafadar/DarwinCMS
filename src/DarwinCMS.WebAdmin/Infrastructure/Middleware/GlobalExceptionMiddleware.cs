@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-
 using System.Net;
 using System.Text.Json;
+using DarwinCMS.Shared.Exceptions;
+using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared;
 
 namespace DarwinCMS.WebAdmin.Infrastructure.Middleware;
 
@@ -14,16 +15,19 @@ public class GlobalExceptionMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionMiddleware> _logger;
+    private readonly IWebHostEnvironment _env;
 
     /// <summary>
     /// Initializes the global exception middleware.
     /// </summary>
     /// <param name="next">The next middleware in the pipeline.</param>
     /// <param name="logger">Logger to write exception details to output.</param>
-    public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
+    /// <param name="env">Current hosting environment for development/production behavior.</param>
+    public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger, IWebHostEnvironment env)
     {
         _next = next;
         _logger = logger;
+        _env = env;
     }
 
     /// <summary>
@@ -38,18 +42,37 @@ public class GlobalExceptionMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception occurred during request execution.");
-
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             context.Response.ContentType = "application/json";
 
-            var errorResponse = new
+            if (ex is BusinessRuleException bre)
             {
-                error = "An unexpected error occurred. Please try again later."
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+
+                var response = new List<UiMessage>
+                {
+                    UiMessage.CreateError(bre.Message)
+                };
+
+                await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                return;
+            }
+
+            var errorId = Guid.NewGuid();
+            _logger.LogError(ex, "Unhandled exception occurred. ErrorId: {ErrorId}", errorId);
+
+            if (_env.IsDevelopment())
+            {
+                throw;
+            }
+
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+
+            var fallback = new List<UiMessage>
+            {
+                UiMessage.CreateError("A system error occurred. Please contact support.", errorId.ToString())
             };
 
-            var errorJson = JsonSerializer.Serialize(errorResponse);
-            await context.Response.WriteAsync(errorJson);
+            await context.Response.WriteAsync(JsonSerializer.Serialize(fallback));
         }
     }
 }

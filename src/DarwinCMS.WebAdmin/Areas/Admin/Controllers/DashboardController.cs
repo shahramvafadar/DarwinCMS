@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using DarwinCMS.WebAdmin.Infrastructure.Security;
 
 namespace DarwinCMS.WebAdmin.Areas.Admin.Controllers;
 
@@ -6,6 +7,7 @@ namespace DarwinCMS.WebAdmin.Areas.Admin.Controllers;
 /// Handles the main admin dashboard view.
 /// </summary>
 [Area("Admin")]
+[HasPermission("access_admin_panel")]
 public class DashboardController : Controller
 {
     /// <summary>

@@ -20,6 +20,11 @@ public class User : BaseEntity, IAuditableEntity
     public string LastName { get; private set; } = string.Empty;
 
     /// <summary>
+    /// Computed full name (FirstName + LastName).
+    /// </summary>
+    public string FullName => $"{FirstName} {LastName}".Trim();
+
+    /// <summary>
     /// Gender: e.g. "Male", "Female", "Other".
     /// </summary>
     public string Gender { get; private set; } = string.Empty;
@@ -76,6 +81,11 @@ public class User : BaseEntity, IAuditableEntity
     public bool IsActive { get; private set; } = true;
 
     /// <summary>
+    /// Indicates if the user is a system-critical account and cannot be deleted or disabled.
+    /// </summary>
+    public bool IsSystem { get; private set; }
+
+    /// <summary>
     /// Last login timestamp (UTC).
     /// </summary>
     public DateTime? LastLoginAt { get; private set; }
@@ -94,11 +104,6 @@ public class User : BaseEntity, IAuditableEntity
     /// Navigation property for roles assigned to this user.
     /// </summary>
     public ICollection<UserRole> UserRoles { get; private set; } = new List<UserRole>();
-
-    /// <summary>
-    /// Computed full name (FirstName + LastName).
-    /// </summary>
-    public string FullName => $"{FirstName} {LastName}".Trim();
 
     /// <summary>
     /// EF Core constructor (used for deserialization).
@@ -202,6 +207,7 @@ public class User : BaseEntity, IAuditableEntity
     /// </summary>
     public void UnconfirmEmail() => IsEmailConfirmed = false;
 
+
     /// <summary>
     /// Updates the username (stored in lowercase).
     /// </summary>
@@ -264,6 +270,16 @@ public class User : BaseEntity, IAuditableEntity
     }
 
     /// <summary>
+    /// Marks this user as a system-critical account.
+    /// </summary>
+    public void MarkAsSystem()
+    {
+        IsSystem = true;
+        MarkAsModified();
+    }
+
+
+    /// <summary>
     /// Records the last login timestamp.
     /// </summary>
     public void RecordLogin()
@@ -298,6 +314,7 @@ public class User : BaseEntity, IAuditableEntity
         ModifiedByUserId = modifierId;
         MarkAsModified();
     }
+
 
     /// <summary>
     /// Returns formatted string summary of the user.

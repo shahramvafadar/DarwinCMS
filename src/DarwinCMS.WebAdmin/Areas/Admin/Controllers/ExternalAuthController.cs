@@ -1,18 +1,18 @@
 ﻿using DarwinCMS.Application.Abstractions.Repositories;
-
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-
+using DarwinCMS.WebAdmin.Infrastructure.Security;
 using System.Security.Claims;
 
 namespace DarwinCMS.WebAdmin.Areas.Admin.Controllers;
 
-/// <summary>
+/// 
 /// Handles login flow with external providers like Google and Microsoft.
-/// </summary>
+/// 
 [Area("Admin")]
 [Route("Admin/ExternalAuth")]
+[AllowAnonymousPermissions]
 public class ExternalAuthController : Controller
 {
     private readonly IUserRepository _userRepository;
@@ -76,11 +76,11 @@ public class ExternalAuthController : Controller
         var permissions = await _rolePermissionRepository.GetPermissionNamesForRolesAsync(roleIds);
 
         var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.Username),
-            new(ClaimTypes.Email, user.Email.Value)
-        };
+    {
+        new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new(ClaimTypes.Name, user.Username),
+        new(ClaimTypes.Email, user.Email.Value)
+    };
 
         foreach (var permission in permissions.Distinct())
         {
@@ -110,4 +110,6 @@ public class ExternalAuthController : Controller
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Login", "Account");
     }
+
 }
+

@@ -1,0 +1,50 @@
+﻿@model List<DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared.UiMessage>
+
+@foreach (var msg in Model)
+{
+    var alertClass = msg.Type?.ToLower() switch
+    {
+        "success" => "alert-success",
+        "warning" => "alert-warning",
+        _ => "alert-danger"
+    };
+
+    var iconClass = msg.Type?.ToLower() switch
+    {
+        "success" => "fas fa-check-circle",
+        "warning" => "fas fa-exclamation-triangle",
+        _ => "fas fa-exclamation-circle"
+    };
+
+    var content = new HtmlString($"<strong><i class=\"{iconClass} me-2\"></i></strong> {msg.Message}");
+
+    <div class="alert @alertClass alert-dismissible fade show shadow-sm d-flex align-items-start p-3 mb-3" role="alert">
+        @if (!string.IsNullOrWhiteSpace(msg.Link))
+        {
+            <a href="@msg.Link" class="text-decoration-none text-reset flex-grow-1">
+                @content
+                @if (!string.IsNullOrWhiteSpace(msg.ReferenceId))
+                {
+                    <div class="mt-2 small text-muted">
+                        <strong>Reference ID:</strong> @msg.ReferenceId
+                        <div>Please send this ID to the system administrator with a detailed description or screenshot.</div>
+                    </div>
+                }
+            </a>
+        }
+        else
+        {
+            <div class="flex-grow-1">
+                @content
+                @if (!string.IsNullOrWhiteSpace(msg.ReferenceId))
+                {
+                    <div class="mt-2 small text-muted">
+                        <strong>Reference ID:</strong> @msg.ReferenceId
+                        <div>Please send this ID to the system administrator with a detailed description or screenshot.</div>
+                    </div>
+                }
+            </div>
+        }
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}

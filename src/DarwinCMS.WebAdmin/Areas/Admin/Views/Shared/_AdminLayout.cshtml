@@ -62,7 +62,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="Admin" asp-controller="Permission" asp-action="Index">
+                            <a class="nav-link" asp-area="Admin" asp-controller="Permissions" asp-action="Index">
                                 <i class="fas fa-lock me-2"></i> Permissions
                             </a>
                         </li>
@@ -77,21 +77,9 @@
 
             <!-- Main content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-                <!-- Alerts -->
-                @if (TempData["SuccessMessage"] is string success)
-                {
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i> @success
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
-                @if (TempData["ErrorMessage"] is string error)
-                {
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i> @error
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                }
+
+                <!-- Centralized error/warning/success messages -->
+                @await Html.PartialAsync("_UiMessage", ViewData["Messages"] as List<DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared.UiMessage> ?? new())
 
                 @RenderBody()
             </main>

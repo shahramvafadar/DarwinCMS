@@ -30,6 +30,12 @@ public class Role : BaseEntity, IAuditableEntity
     public bool IsActive { get; private set; } = true;
 
     /// <summary>
+    /// Indicates if this role is a system-critical role that cannot be deleted or renamed.
+    /// </summary>
+    public bool IsSystem { get; private set; }
+
+
+    /// <summary>
     /// Optional module name if the role is scoped to a specific module (e.g., "CRM", "Blog").
     /// If null, role is system-wide.
     /// </summary>
@@ -105,6 +111,16 @@ public class Role : BaseEntity, IAuditableEntity
         Description = description?.Trim();
         SetModifiedBy(modifierUserId);
     }
+
+    /// <summary>
+    /// Marks this role as a system-critical role.
+    /// </summary>
+    public void MarkAsSystem()
+    {
+        IsSystem = true;
+        MarkAsModified();
+    }
+
 
     /// <summary>
     /// Changes module scope of this role.

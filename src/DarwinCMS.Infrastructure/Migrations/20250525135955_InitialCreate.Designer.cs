@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DarwinCMS.Infrastructure.Migrations
 {
     [DbContext(typeof(DarwinDbContext))]
-    [Migration("20250517154330_InitialCreate")]
+    [Migration("20250525135955_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -85,6 +85,44 @@ namespace DarwinCMS.Infrastructure.Migrations
                     b.ToTable("ContentItems", (string)null);
                 });
 
+            modelBuilder.Entity("DarwinCMS.Domain.Entities.PasswordResetToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("Email", "IsUsed");
+
+                    b.ToTable("PasswordResetTokens", (string)null);
+                });
+
             modelBuilder.Entity("DarwinCMS.Domain.Entities.Permission", b =>
                 {
                     b.Property<Guid>("Id")
@@ -104,6 +142,9 @@ namespace DarwinCMS.Infrastructure.Migrations
                     b.Property<string>("DisplayName")
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
+
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("ModifiedAt")
                         .HasColumnType("datetime2");
@@ -152,6 +193,9 @@ namespace DarwinCMS.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSystem")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("ModifiedAt")
@@ -251,6 +295,9 @@ namespace DarwinCMS.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsMobileConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSystem")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastLoginAt")

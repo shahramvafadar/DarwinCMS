@@ -43,6 +43,12 @@ public class Permission : BaseEntity, IAuditableEntity
     public Guid? ModifiedByUserId { get; private set; }
 
     /// <summary>
+    /// Indicates whether this permission is a system-critical permission that cannot be deleted or renamed.
+    /// </summary>
+    public bool IsSystem { get; private set; }
+
+
+    /// <summary>
     /// Navigation to the roles that have this permission.
     /// </summary>
     public ICollection<RolePermission> RolePermissions { get; private set; } = new List<RolePermission>();
@@ -60,19 +66,23 @@ public class Permission : BaseEntity, IAuditableEntity
     /// <param name="displayName">Optional label for UI</param>
     /// <param name="module">Optional module association</param>
     /// <param name="description">Optional description</param>
+    /// <param name="isSystem">Indicates if this is a system-critical permission</param>
     public Permission(
-        string name,
-        Guid createdByUserId,
-        string? displayName = null,
-        string? module = null,
-        string? description = null)
+    string name,
+    Guid createdByUserId,
+    string? displayName = null,
+    string? module = null,
+    string? description = null,
+    bool isSystem = false)
     {
         SetName(name);
         CreatedByUserId = createdByUserId;
         DisplayName = displayName?.Trim();
         Module = module?.Trim();
         Description = description?.Trim();
+        IsSystem = isSystem;
     }
+
 
     /// <summary>
     /// Sets or updates the internal name. Should only be called internally or during seed.
@@ -104,6 +114,17 @@ public class Permission : BaseEntity, IAuditableEntity
         ModifiedByUserId = userId;
         MarkAsModified();
     }
+
+    /// <summary>
+    /// Marks the permission as system-protected (cannot be deleted).
+    /// Can only be used by internal seeders or protected logic.
+    /// </summary>
+    public void MarkAsSystem()
+    {
+        IsSystem = true;
+        MarkAsModified();
+    }
+
 
     /// <summary>
     /// Returns the internal name of the permission.

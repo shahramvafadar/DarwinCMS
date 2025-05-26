@@ -1,6 +1,7 @@
 ﻿using DarwinCMS.Application.Abstractions.Repositories;
 using DarwinCMS.Domain.Entities;
 using DarwinCMS.Infrastructure.EF;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace DarwinCMS.Infrastructure.Repositories;
@@ -10,48 +11,41 @@ namespace DarwinCMS.Infrastructure.Repositories;
 /// </summary>
 public class PasswordResetTokenRepository : IPasswordResetTokenRepository
 {
-    private readonly DarwinDbContext _dbContext;
+    private readonly DarwinDbContext _db;
+    private readonly DbSet<PasswordResetToken> _set;
 
     /// <summary>
     /// Initializes the repository with the database context.
     /// </summary>
-    public PasswordResetTokenRepository(DarwinDbContext dbContext)
+    public PasswordResetTokenRepository(DarwinDbContext db)
     {
-        _dbContext = dbContext;
+        _db = db;
+        _set = _db.PasswordResetTokens;
     }
 
-    /// <summary>
-    /// Retrieves a token entity by its unique string value.
-    /// Returns null if not found or expired.
-    /// </summary>
+    /// <inheritdoc />
     public async Task<PasswordResetToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.PasswordResetTokens
+        return await _set
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Token == token, cancellationToken);
     }
 
-    /// <summary>
-    /// Adds a new password reset token to the database.
-    /// </summary>
+    /// <inheritdoc />
     public async Task AddAsync(PasswordResetToken token, CancellationToken cancellationToken = default)
     {
-        await _dbContext.PasswordResetTokens.AddAsync(token, cancellationToken);
+        await _set.AddAsync(token, cancellationToken);
     }
 
-    /// <summary>
-    /// Updates the token state (e.g., to mark as used).
-    /// </summary>
+    /// <inheritdoc />
     public void Update(PasswordResetToken token)
     {
-        _dbContext.PasswordResetTokens.Update(token);
+        _set.Update(token);
     }
 
-    /// <summary>
-    /// Commits all changes to the underlying database.
-    /// </summary>
+    /// <inheritdoc />
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
     }
 }

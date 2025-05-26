@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
-using DarwinCMS.Application.DTOs.Users;
+
+using DarwinCMS.Application.DTOs.Permissions;
 using DarwinCMS.Application.DTOs.Roles;
+using DarwinCMS.Application.DTOs.Users;
 using DarwinCMS.Domain.Entities;
-using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Users;
+using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Permissions;
 using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Roles;
+using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Users;
 
 namespace DarwinCMS.WebAdmin.Mapping;
 
@@ -76,5 +79,23 @@ public class AdminMapperProfile : Profile
         CreateMap<Role, DeleteRoleViewModel>()
             .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.DisplayName))
             .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description));
+
+        // ========== PERMISSION MAPPINGS ==========
+
+        // Maps Permission entity to PermissionListDto used in table listing.
+        CreateMap<Permission, PermissionListDto>();
+
+        // Maps CreatePermissionViewModel to CreatePermissionRequest.
+        CreateMap<CreatePermissionViewModel, CreatePermissionRequest>();
+
+        // Maps UpdatePermissionViewModel to UpdatePermissionRequest.
+        CreateMap<EditPermissionViewModel, UpdatePermissionRequest>();
+
+        // Maps Permission entity to EditPermissionViewModel.
+        CreateMap<Permission, EditPermissionViewModel>()
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+            .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => src.DisplayName));
+
     }
 }

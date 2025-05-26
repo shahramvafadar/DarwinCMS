@@ -1,16 +1,23 @@
 ﻿using AutoMapper;
+
 using DarwinCMS.Application.DTOs.Roles;
 using DarwinCMS.Application.Services.AccessControl;
 using DarwinCMS.Application.Services.Roles;
+using DarwinCMS.Shared.Exceptions;
 using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Roles;
+using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared;
+using DarwinCMS.WebAdmin.Infrastructure.Helpers;
+using DarwinCMS.WebAdmin.Infrastructure.Security;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace DarwinCMS.WebAdmin.Areas.Admin.Controllers;
 
-/// <summary>
+/// 
 /// Handles administrative role management including listing, creation, editing, and deletion of roles.
-/// </summary>
+/// 
 [Area("Admin")]
+[HasPermission("manage_roles")]
 public class RolesController : Controller
 {
     private readonly IRoleService _roleService;
@@ -20,9 +27,6 @@ public class RolesController : Controller
     /// <summary>
     /// Initializes a new instance of the <see cref="RolesController"/> class.
     /// </summary>
-    /// <param name="roleService">Role service for CRUD operations.</param>
-    /// <param name="currentUser">Current authenticated user context.</param>
-    /// <param name="mapper">AutoMapper instance.</param>
     public RolesController(IRoleService roleService, ICurrentUserService currentUser, IMapper mapper)
     {
         _roleService = roleService;
@@ -33,10 +37,6 @@ public class RolesController : Controller
     /// <summary>
     /// Displays the paginated list of roles with optional filtering and sorting.
     /// </summary>
-    /// <param name="searchTerm">Search term for filtering roles by name.</param>
-    /// <param name="sortColumn">Column to sort by (e.g., Name).</param>
-    /// <param name="sortDirection">Sort direction (asc or desc).</param>
-    /// <param name="page">Current page number for pagination.</param>
     [HttpGet]
     public async Task<IActionResult> Index(string? searchTerm, string? sortColumn, string? sortDirection, int page = 1)
     {
@@ -70,7 +70,6 @@ public class RolesController : Controller
     /// <summary>
     /// Submits the role creation request.
     /// </summary>
-    /// <param name="model">Form model containing role data.</param>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateRoleViewModel model)
@@ -81,14 +80,13 @@ public class RolesController : Controller
         var request = _mapper.Map<CreateRoleRequest>(model);
         await _roleService.CreateAsync(request, _currentUser.UserId ?? Guid.Empty);
 
-        TempData["SuccessMessage"] = "Role created successfully.";
+        this.AddSuccess("Role created successfully.");
         return RedirectToAction(nameof(Index));
     }
 
     /// <summary>
     /// Displays the role edit form.
     /// </summary>
-    /// <param name="id">ID of the role to edit.</param>
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id)
     {
@@ -103,7 +101,6 @@ public class RolesController : Controller
     /// <summary>
     /// Submits the updated role data.
     /// </summary>
-    /// <param name="model">Form model containing updated role information.</param>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EditRoleViewModel model)
@@ -111,17 +108,23 @@ public class RolesController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        var request = _mapper.Map<UpdateRoleRequest>(model);
-        await _roleService.UpdateAsync(request, _currentUser.UserId ?? Guid.Empty);
-
-        TempData["SuccessMessage"] = "Role updated successfully.";
-        return RedirectToAction(nameof(Index));
+        try
+        {
+            var request = _mapper.Map<UpdateRoleRequest>(model);
+            await _roleService.UpdateAsync(request, _currentUser.UserId ?? Guid.Empty);
+            this.AddSuccess("Role updated successfully.");
+            return RedirectToAction(nameof(Index));
+        }
+        catch (BusinessRuleException ex)
+        {
+            this.AddError(ex.Message);
+            return View(model);
+        }
     }
 
     /// <summary>
     /// Displays the delete confirmation page for a role.
     /// </summary>
-    /// <param name="id">ID of the role to delete.</param>
     [HttpGet]
     [Route("Admin/Roles/Delete/{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
@@ -137,13 +140,22 @@ public class RolesController : Controller
     /// <summary>
     /// Confirms deletion of the role.
     /// </summary>
-    /// <param name="id">ID of the role to permanently delete.</param>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(Guid id)
     {
-        await _roleService.DeleteAsync(id);
-        TempData["SuccessMessage"] = "Role deleted successfully.";
+        try
+        {
+            await _roleService.DeleteAsync(id);
+            this.AddSuccess("Role deleted successfully.");
+        }
+        catch (BusinessRuleException ex)
+        {
+            this.AddError(ex.Message);
+        }
+
         return RedirectToAction(nameof(Index));
     }
+
 }
+

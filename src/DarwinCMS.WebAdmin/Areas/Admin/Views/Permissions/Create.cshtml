@@ -1,0 +1,34 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Permissions.CreatePermissionViewModel
+
+@{
+    ViewData["Title"] = "Create Permission";
+}
+
+<h1 class="mb-4">Create New Permission</h1>
+
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="DisplayName" class="form-label"></label>
+        <input asp-for="DisplayName" class="form-control" />
+        <span asp-validation-for="DisplayName" class="text-danger"></span>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Cancel
+        </a>
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-check-circle me-1"></i> Create
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

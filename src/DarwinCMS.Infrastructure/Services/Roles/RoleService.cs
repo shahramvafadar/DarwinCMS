@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
+
 using DarwinCMS.Application.Abstractions.Repositories;
 using DarwinCMS.Application.DTOs.Roles;
 using DarwinCMS.Application.Services.Roles;
 using DarwinCMS.Domain.Entities;
+using DarwinCMS.Shared.Exceptions;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace DarwinCMS.Infrastructure.Services.Roles;
@@ -91,7 +94,7 @@ public class RoleService : IRoleService
     public async Task UpdateAsync(UpdateRoleRequest request, Guid performedByUserId, CancellationToken cancellationToken = default)
     {
         var role = await _roleRepository.GetByIdAsync(request.Id, cancellationToken)
-            ?? throw new InvalidOperationException("Role not found.");
+            ?? throw new BusinessRuleException("Role not found.");
 
         role.UpdateInfo(request.DisplayName, request.Description, performedByUserId);
         role.SetModule(request.Module, performedByUserId);
@@ -107,16 +110,20 @@ public class RoleService : IRoleService
     }
 
     /// <summary>
-    /// Deletes a role from the system permanently.
+    /// Deletes a role permanently unless it is marked as system.
     /// </summary>
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var role = await _roleRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new InvalidOperationException("Role not found.");
+            ?? throw new BusinessRuleException("Role not found.");
+
+        if (role.IsSystem)
+            throw new BusinessRuleException("System roles cannot be deleted.");
 
         _roleRepository.Delete(role);
         await _roleRepository.SaveChangesAsync(cancellationToken);
     }
+
 
     /// <summary>
     /// Returns a paged list of roles with optional filtering and sorting.
