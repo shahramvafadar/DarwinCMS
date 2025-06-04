@@ -1,8 +1,8 @@
 ﻿namespace DarwinCMS.Domain.Entities;
 
 /// <summary>
-/// Join entity that represents a many-to-many relationship between Users and Roles.
-/// Each user can have multiple roles, and each role can be assigned to multiple users.
+/// Join entity that represents the many-to-many relationship between users and roles.
+/// This mapping defines which roles are assigned to a specific user.
 /// </summary>
 public class UserRole : BaseEntity
 {
@@ -17,69 +17,76 @@ public class UserRole : BaseEntity
     public Guid RoleId { get; private set; }
 
     /// <summary>
-    /// Optional module context (e.g., "Store", "CRM").
-    /// Allows role scoping to specific modules.
+    /// Optional module label to scope the role (e.g., "Store", "CRM").
     /// </summary>
     public string? Module { get; private set; }
 
     /// <summary>
-    /// Whether this role was assigned automatically or manually.
-    /// Useful for user registration flows or defaults.
+    /// Indicates whether this role was assigned automatically by the system.
     /// </summary>
     public bool IsSystemAssigned { get; private set; }
 
     /// <summary>
-    /// Navigation to the associated user.
+    /// Navigation to the user.
     /// </summary>
     public User? User { get; private set; }
 
     /// <summary>
-    /// Navigation to the associated role.
+    /// Navigation to the role.
     /// </summary>
     public Role? Role { get; private set; }
 
     /// <summary>
-    /// Required for EF Core.
+    /// EF Core constructor.
     /// </summary>
     protected UserRole() { }
 
     /// <summary>
-    /// Creates a new user-role link.
+    /// Creates a new UserRole mapping.
     /// </summary>
-    /// <param name="userId">User ID</param>
-    /// <param name="roleId">Role ID</param>
-    /// <param name="module">Optional module label</param>
-    /// <param name="isSystemAssigned">Was this assignment done automatically?</param>
+    /// <param name="userId">The ID of the user.</param>
+    /// <param name="roleId">The ID of the role.</param>
+    /// <param name="module">Optional module label for scoping the role.</param>
+    /// <param name="isSystemAssigned">Whether the assignment was automatic (true) or manual (false).</param>
     public UserRole(Guid userId, Guid roleId, string? module = null, bool isSystemAssigned = false)
     {
         UserId = userId;
         RoleId = roleId;
         Module = module?.Trim();
         IsSystemAssigned = isSystemAssigned;
+        MarkAsCreated(null);
     }
 
     /// <summary>
-    /// Marks this role as assigned by system.
+    /// Marks this assignment as system-assigned (automatic).
     /// </summary>
-    public void MarkAsSystemAssigned() => IsSystemAssigned = true;
+    public void MarkAsSystemAssigned()
+    {
+        IsSystemAssigned = true;
+        MarkAsModified(null);
+    }
 
     /// <summary>
-    /// Marks this role as manually assigned by user or admin.
+    /// Marks this assignment as manually assigned.
     /// </summary>
-    public void MarkAsManuallyAssigned() => IsSystemAssigned = false;
+    public void MarkAsManuallyAssigned()
+    {
+        IsSystemAssigned = false;
+        MarkAsModified(null);
+    }
 
     /// <summary>
-    /// Updates the module context of the role assignment.
+    /// Updates the module label of this assignment.
     /// </summary>
-    /// <param name="module">New module name or null</param>
+    /// <param name="module">New module label or null.</param>
     public void UpdateModule(string? module)
     {
         Module = module?.Trim();
-        MarkAsModified();
+        MarkAsModified(null);
     }
 
     /// <summary>
-    /// Compares UserRole by UserId and RoleId
+    /// Compares this mapping by UserId and RoleId only.
     /// </summary>
     public override bool Equals(object? obj)
     {
@@ -95,4 +102,21 @@ public class UserRole : BaseEntity
         return HashCode.Combine(UserId, RoleId);
     }
 
+    /// <summary>
+    /// Marks the mapping as logically deleted.
+    /// </summary>
+    public void MarkAsDeleted(Guid? modifierId = null)
+    {
+        IsDeleted = true;
+        MarkAsModified(modifierId, isDeleted: true);
+    }
+
+    /// <summary>
+    /// Restores the mapping from soft-deleted state.
+    /// </summary>
+    public void Restore(Guid? modifierId = null)
+    {
+        IsDeleted = false;
+        MarkAsModified(modifierId, isDeleted: false);
+    }
 }

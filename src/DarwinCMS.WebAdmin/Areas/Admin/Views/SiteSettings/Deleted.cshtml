@@ -1,0 +1,44 @@
+﻿@model List<DarwinCMS.WebAdmin.Areas.Admin.ViewModels.SiteSettings.SiteSettingListViewModel>
+
+@{
+    ViewData["Title"] = "Deleted Site Settings (Recycle Bin)";
+}
+
+<h1 class="mb-4">Deleted Site Settings</h1>
+
+
+
+<table class="table table-hover table-bordered">
+    <thead class="table-light">
+        <tr>
+            <th>Key</th>
+            <th>Category</th>
+            <th>Value</th>
+            <th>Language</th>
+            <th class="text-end">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Key</td>
+                <td>@item.Category</td>
+                <td>@item.Value</td>
+                <td>@item.LanguageCode</td>
+                <td class="text-end">
+                    <form asp-action="Restore" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@item.Id" />
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="fas fa-undo"></i> Restore
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-outline-secondary">
+    <i class="fas fa-arrow-left me-1"></i> Back to Active List
+</a>

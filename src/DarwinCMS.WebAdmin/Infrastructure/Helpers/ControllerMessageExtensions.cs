@@ -1,4 +1,6 @@
-﻿using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared;
+﻿using System.Text.Json;
+
+using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,12 +21,13 @@ public static class ControllerMessageExtensions
     /// <param name="message">The UiMessage to add.</param>
     public static void AddMessage(this Controller controller, UiMessage message)
     {
-        if (controller.ViewData[Key] is not List<UiMessage> list)
-        {
-            list = new List<UiMessage>();
-            controller.ViewData[Key] = list;
-        }
-        list.Add(message);
+        var messages = controller.TempData.ContainsKey(Key)
+            ? JsonSerializer.Deserialize<List<UiMessage>>(controller.TempData[Key]!.ToString()!) ?? new()
+            : new List<UiMessage>();
+
+        messages.Add(message);
+
+        controller.TempData[Key] = JsonSerializer.Serialize(messages);
     }
 
     /// <summary>

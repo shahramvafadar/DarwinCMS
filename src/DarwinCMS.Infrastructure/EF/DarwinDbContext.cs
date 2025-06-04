@@ -1,6 +1,8 @@
 ﻿using DarwinCMS.Domain.Entities;
 using DarwinCMS.Domain.ValueObjects;
+
 using Microsoft.EntityFrameworkCore;
+
 using System.Reflection;
 
 namespace DarwinCMS.Infrastructure.EF;
@@ -42,6 +44,31 @@ public class DarwinDbContext : DbContext
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     /// <summary>
+    /// Gets the MenuItems entity set (supports hierarchical navigation).
+    /// </summary>
+    public DbSet<MenuItem> MenuItems => Set<MenuItem>();
+
+    /// <summary>
+    /// Gets the Pages managed through CMS.
+    /// </summary>
+    public DbSet<Page> Pages => Set<Page>();
+
+    /// <summary>
+    /// Gets the Menus entity set.
+    /// </summary>
+    public DbSet<Menu> Menus => Set<Menu>();
+
+    /// <summary>
+    /// Gets the site-wide settings (key-value configuration).
+    /// </summary>
+    public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
+
+    /// <summary>
+    /// Gets all uploaded file records (e.g., images, documents, scripts).
+    /// </summary>
+    public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
+
+    /// <summary>
     /// Creates a new instance of the <see cref="DarwinDbContext"/> class using the specified options.
     /// </summary>
     /// <param name="options">The EF Core options passed by dependency injection.</param>
@@ -65,7 +92,7 @@ public class DarwinDbContext : DbContext
 
         // Search for module DLLs in bin folder that aren't loaded yet
         var binFolder = AppDomain.CurrentDomain.BaseDirectory;
-        var moduleDlls = Directory.GetFiles(binFolder, "DarwinCMS.Module.*.dll", SearchOption.AllDirectories);
+        var moduleDlls = Directory.EnumerateFiles(binFolder, "DarwinCMS.Module.*.dll", SearchOption.AllDirectories);
 
         foreach (var dllPath in moduleDlls)
         {

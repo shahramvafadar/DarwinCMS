@@ -8,32 +8,41 @@ using Microsoft.EntityFrameworkCore;
 namespace DarwinCMS.Infrastructure.Repositories;
 
 /// <summary>
-/// Repository for managing individual MenuItems, including nested children.
+/// EF Core implementation of <see cref="IMenuItemRepository"/>.
+/// Supports full CRUD and tree traversal for menu items.
 /// </summary>
 public class MenuItemRepository : BaseRepository<MenuItem>, IMenuItemRepository
 {
     /// <summary>
-    /// Initializes a new instance of the MenuItem repository.
+    /// Initializes the repository with EF Core context.
     /// </summary>
-    /// <param name="db">Darwin CMS database context.</param>
     public MenuItemRepository(DarwinDbContext db) : base(db) { }
 
+
     /// <inheritdoc />
-    public async Task<List<MenuItem>> GetItemsByMenuIdAsync(Guid menuId)
+    public async Task<List<MenuItem>> GetByMenuIdAsync(Guid menuId, CancellationToken cancellationToken = default)
     {
-        return await _set
-            .Where(mi => mi.MenuId == menuId && mi.ParentItemId == null)
-            .Include(mi => mi.Children.OrderBy(c => c.DisplayOrder))
-            .OrderBy(mi => mi.DisplayOrder)
-            .ToListAsync();
+        return await _db.MenuItems
+            .Where(mi => mi.MenuId == menuId)
+            .Include(mi => mi.Children)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<List<MenuItem>> GetChildrenAsync(Guid parentItemId)
+    public async Task<List<MenuItem>> GetChildrenAsync(Guid parentId, CancellationToken cancellationToken = default)
     {
-        return await _set
-            .Where(mi => mi.ParentItemId == parentItemId)
-            .OrderBy(mi => mi.DisplayOrder)
-            .ToListAsync();
+        return await _db.MenuItems
+            .Where(mi => mi.ParentId == parentId)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<MenuItem?> GetWithChildrenAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _db.MenuItems
+            .Include(mi => mi.Children)
+            .FirstOrDefaultAsync(mi => mi.Id == id, cancellationToken);
     }
 }

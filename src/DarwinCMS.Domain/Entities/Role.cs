@@ -1,4 +1,5 @@
-﻿using DarwinCMS.Domain.Interfaces;
+﻿using System;
+using System.Collections.Generic;
 
 namespace DarwinCMS.Domain.Entities;
 
@@ -6,7 +7,7 @@ namespace DarwinCMS.Domain.Entities;
 /// Represents a role in the system. Roles define access levels and user grouping.
 /// A role can be global or module-specific and contains a set of permissions.
 /// </summary>
-public class Role : BaseEntity, IAuditableEntity
+public class Role : BaseEntity
 {
     /// <summary>
     /// Technical identifier of the role (e.g., "Admin"). Must be unique.
@@ -34,7 +35,6 @@ public class Role : BaseEntity, IAuditableEntity
     /// </summary>
     public bool IsSystem { get; private set; }
 
-
     /// <summary>
     /// Optional module name if the role is scoped to a specific module (e.g., "CRM", "Blog").
     /// If null, role is system-wide.
@@ -45,16 +45,6 @@ public class Role : BaseEntity, IAuditableEntity
     /// Optional order for UI display or evaluation precedence.
     /// </summary>
     public int? DisplayOrder { get; private set; }
-
-    /// <summary>
-    /// ID of the user who created the role.
-    /// </summary>
-    public Guid CreatedByUserId { get; private set; }
-
-    /// <summary>
-    /// ID of the user who last modified the role.
-    /// </summary>
-    public Guid? ModifiedByUserId { get; private set; }
 
     /// <summary>
     /// Navigation to users assigned to this role.
@@ -83,15 +73,15 @@ public class Role : BaseEntity, IAuditableEntity
         int? displayOrder = null)
     {
         SetName(name);
-        CreatedByUserId = createdByUserId;
         DisplayName = displayName?.Trim();
         Description = description?.Trim();
         Module = module?.Trim();
         DisplayOrder = displayOrder;
+        MarkAsCreated(createdByUserId);
     }
 
     /// <summary>
-    /// Updates the technical name of the role. Rarely used.
+    /// Updates the technical name of the role. Should only be used during seed or internal logic.
     /// </summary>
     /// <param name="name">New system name</param>
     public void SetName(string name)
@@ -99,7 +89,6 @@ public class Role : BaseEntity, IAuditableEntity
         Name = string.IsNullOrWhiteSpace(name)
             ? throw new ArgumentException("Role name is required.", nameof(name))
             : name.Trim();
-        MarkAsModified();
     }
 
     /// <summary>
@@ -109,62 +98,79 @@ public class Role : BaseEntity, IAuditableEntity
     {
         DisplayName = displayName?.Trim();
         Description = description?.Trim();
-        SetModifiedBy(modifierUserId);
+        MarkAsModified(modifierUserId);
     }
 
     /// <summary>
     /// Marks this role as a system-critical role.
     /// </summary>
-    public void MarkAsSystem()
+    /// <param name="modifierUserId">ID of the user performing this action.</param>
+    public void MarkAsSystem(Guid? modifierUserId)
     {
         IsSystem = true;
-        MarkAsModified();
+        MarkAsModified(modifierUserId);
     }
-
 
     /// <summary>
     /// Changes module scope of this role.
     /// </summary>
+    /// <param name="module">New module name</param>
+    /// <param name="modifierUserId">ID of the user modifying</param>
     public void SetModule(string? module, Guid modifierUserId)
     {
         Module = module?.Trim();
-        SetModifiedBy(modifierUserId);
+        MarkAsModified(modifierUserId);
     }
 
     /// <summary>
     /// Updates the display order (for UI or logic).
     /// </summary>
+    /// <param name="order">New display order</param>
+    /// <param name="modifierUserId">ID of the user modifying</param>
     public void SetDisplayOrder(int? order, Guid modifierUserId)
     {
         DisplayOrder = order;
-        SetModifiedBy(modifierUserId);
+        MarkAsModified(modifierUserId);
     }
 
     /// <summary>
     /// Disables this role (soft-delete).
     /// </summary>
+    /// <param name="modifierUserId">ID of the user modifying</param>
     public void Deactivate(Guid modifierUserId)
     {
         IsActive = false;
-        SetModifiedBy(modifierUserId);
+        MarkAsModified(modifierUserId);
     }
 
     /// <summary>
     /// Re-activates this role.
     /// </summary>
+    /// <param name="modifierUserId">ID of the user modifying</param>
     public void Activate(Guid modifierUserId)
     {
         IsActive = true;
-        SetModifiedBy(modifierUserId);
+        MarkAsModified(modifierUserId);
     }
 
     /// <summary>
-    /// Marks this role as modified by a user.
+    /// Marks this role as logically deleted (soft delete).
     /// </summary>
-    private void SetModifiedBy(Guid userId)
+    /// <param name="modifierUserId">ID of the user performing the deletion</param>
+    public void MarkAsDeleted(Guid? modifierUserId)
     {
-        ModifiedByUserId = userId;
-        MarkAsModified();
+        IsDeleted = true;
+        MarkAsModified(modifierUserId, isDeleted: true);
+    }
+
+    /// <summary>
+    /// Restores a previously soft-deleted role.
+    /// </summary>
+    /// <param name="modifierUserId">ID of the user performing the restore</param>
+    public void Restore(Guid? modifierUserId)
+    {
+        IsDeleted = false;
+        MarkAsModified(modifierUserId, isDeleted: false);
     }
 
     /// <summary>

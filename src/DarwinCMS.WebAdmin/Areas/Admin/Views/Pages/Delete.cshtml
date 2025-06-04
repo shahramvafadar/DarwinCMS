@@ -1,0 +1,52 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Pages.PageListItemViewModel
+
+@{
+    ViewData["Title"] = "Delete Page";
+}
+
+<h1 class="mb-4 text-danger">
+    <i class="fas fa-trash-alt me-2"></i> Delete Page
+</h1>
+
+<div class="alert alert-warning">
+    Are you sure you want to permanently delete the following page?
+</div>
+
+<div class="mb-4">
+    <dl class="row">
+        <dt class="col-sm-3">Title</dt>
+        <dd class="col-sm-9">@Model.Title</dd>
+
+        <dt class="col-sm-3">Slug</dt>
+        <dd class="col-sm-9">@Model.Slug</dd>
+
+        <dt class="col-sm-3">Language</dt>
+        <dd class="col-sm-9">@Model.LanguageCode</dd>
+
+        <dt class="col-sm-3">Published</dt>
+        <dd class="col-sm-9">
+            @if (Model.IsPublished)
+            {
+                <span class="badge bg-success">Yes</span>
+            }
+            else
+            {
+                <span class="badge bg-secondary">No</span>
+            }
+        </dd>
+    </dl>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Cancel
+        </a>
+
+        <button type="submit" class="btn btn-danger">
+            <i class="fas fa-check-circle me-1"></i> Yes, Delete Permanently
+        </button>
+    </div>
+</form>

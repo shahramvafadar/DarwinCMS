@@ -3,52 +3,63 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace DarwinCMS.Infrastructure.EF.Configuration;
+namespace DarwinCMS.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// EF Core Fluent API configuration for the SiteSetting entity.
-/// Controls mapping and unique constraints for settings.
+/// Entity Framework Core configuration for SiteSetting entity.
+/// Defines table structure, constraints, and relationships.
 /// </summary>
 public class SiteSettingConfiguration : IEntityTypeConfiguration<SiteSetting>
 {
     /// <summary>
-    /// Configures the EF Core mapping for the SiteSetting entity.
+    /// Configures the SiteSetting entity in the EF Core model.
     /// </summary>
-    /// <param name="builder">The entity builder for SiteSetting.</param>
+    /// <param name="builder">Entity builder for SiteSetting.</param>
     public void Configure(EntityTypeBuilder<SiteSetting> builder)
     {
+        // Table name
         builder.ToTable("SiteSettings");
 
+        // Primary key
         builder.HasKey(s => s.Id);
 
+        // Unique constraint on Key and optional LanguageCode
+        builder.HasIndex(s => new { s.Key, s.LanguageCode }).IsUnique();
+
+        // Properties
         builder.Property(s => s.Key)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(200);
 
         builder.Property(s => s.Value)
             .IsRequired();
 
+        builder.Property(s => s.ValueType)
+            .IsRequired()
+            .HasMaxLength(50);
+
         builder.Property(s => s.Category)
-            .HasMaxLength(64);
+            .HasMaxLength(100);
 
         builder.Property(s => s.LanguageCode)
             .HasMaxLength(10);
 
-        builder.Property(s => s.ValueType)
-            .IsRequired()
-            .HasMaxLength(20);
-
         builder.Property(s => s.Description)
-            .HasMaxLength(300);
+            .HasMaxLength(500);
 
         builder.Property(s => s.IsSystem)
             .IsRequired();
 
-        builder.Property(s => s.CreatedAt).IsRequired();
-        builder.Property(s => s.ModifiedAt);
+        builder.Property(s => s.IsDeleted)
+            .IsRequired()
+            .HasDefaultValue(false);
 
-        // Unique setting key + language to allow per-language overrides
-        builder.HasIndex(s => new { s.Key, s.LanguageCode })
-               .IsUnique();
+        builder.Property(s => s.CreatedAt)
+            .IsRequired();
+
+        builder.Property(s => s.ModifiedAt)
+            .IsRequired(false);
+
+        // No navigation properties to configure for SiteSetting currently.
     }
 }

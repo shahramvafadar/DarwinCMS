@@ -34,6 +34,15 @@ public class RoleRepository : BaseRepository<Role>, IRoleRepository
             .ToListAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Returns a list of all roles that are marked as active.
+    /// </summary>
+    public async Task<List<Role>> GetAllActiveAsync(CancellationToken cancellationToken = default)
+        => await _set
+            .Where(r => r.IsActive)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
     /// <inheritdoc />
     public override IQueryable<Role> Query()
     {

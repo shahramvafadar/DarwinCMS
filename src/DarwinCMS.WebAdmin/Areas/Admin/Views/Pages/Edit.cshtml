@@ -1,0 +1,89 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Pages.EditPageViewModel
+
+@{
+    ViewData["Title"] = "Edit Page";
+}
+
+<h1 class="mb-4">
+    <i class="fas fa-edit me-2"></i> Edit Page
+</h1>
+
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Slug" class="form-label"></label>
+        <input asp-for="Slug" class="form-control" />
+        <span asp-validation-for="Slug" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="LanguageCode" class="form-label"></label>
+        <select asp-for="LanguageCode" class="form-select">
+            @{
+                var languageList = ViewBag.LanguageList as List<(string Code, string DisplayName)> ?? new();
+            }
+            @foreach (var lang in languageList)
+            {
+                <option value="@lang.Code" selected="@(lang.Code == Model.LanguageCode ? "selected" : null)">
+                    @lang.DisplayName
+                </option>
+            }
+        </select>
+        <span asp-validation-for="LanguageCode" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Summary" class="form-label"></label>
+        <textarea asp-for="Summary" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="Summary" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ContentHtml" class="form-label"></label>
+        <textarea asp-for="ContentHtml" class="form-control" rows="8"></textarea>
+        <span asp-validation-for="ContentHtml" class="text-danger"></span>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="PublishDateUtc" class="form-label"></label>
+            <input asp-for="PublishDateUtc" class="form-control" type="datetime-local" />
+            <span asp-validation-for="PublishDateUtc" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="ExpireDateUtc" class="form-label"></label>
+            <input asp-for="ExpireDateUtc" class="form-control" type="datetime-local" />
+            <span asp-validation-for="ExpireDateUtc" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="IsPublished" class="form-label"></label>
+        <select asp-for="IsPublished" class="form-select">
+            <option value="true" selected="@(Model.IsPublished ? "selected" : null)">Published</option>
+            <option value="false" selected="@(Model.IsPublished ? null : "selected")">Draft</option>
+        </select>
+        <span asp-validation-for="IsPublished" class="text-danger"></span>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Cancel
+        </a>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i> Save Changes
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,97 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.SiteSettings.SiteSettingIndexViewModel
+
+@{
+    ViewData["Title"] = "Site Settings";
+    var sortIcon = (string column) => Model.SortColumn == column
+        ? (Model.SortDirection == "asc" ? "fa-sort-up" : "fa-sort-down")
+        : "fa-sort";
+}
+
+<h1 class="mb-4">Site Settings</h1>
+
+<form method="get" asp-action="Index" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="Search by key or category" />
+        <button class="btn btn-outline-secondary" type="submit">
+            <i class="fas fa-search"></i>
+        </button>
+    </div>
+</form>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th>
+                <a asp-action="Index" asp-route-searchTerm="@Model.SearchTerm" asp-route-sortColumn="Key" asp-route-sortDirection="@(Model.SortColumn == "Key" && Model.SortDirection == "asc" ? "desc" : "asc")">
+                    Key <i class="fas @sortIcon("Key")"></i>
+                </a>
+            </th>
+            <th>
+                <a asp-action="Index" asp-route-searchTerm="@Model.SearchTerm" asp-route-sortColumn="Category" asp-route-sortDirection="@(Model.SortColumn == "Category" && Model.SortDirection == "asc" ? "desc" : "asc")">
+                    Category <i class="fas @sortIcon("Category")"></i>
+                </a>
+            </th>
+            <th>Value</th>
+            <th class="text-center">System</th>
+            <th class="text-end">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.SiteSettings)
+        {
+            <tr>
+                <td>@item.Key</td>
+                <td>@item.Category</td>
+                <td>@item.Value</td>
+                <td class="text-center">
+                    @if (item.IsSystem)
+                    {
+                        <i class="fas fa-lock text-secondary" title="System setting"></i>
+                    }
+                </td>
+                <td class="text-end">
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    @if (!item.IsSystem)
+                    {
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<nav>
+    <ul class="pagination justify-content-center">
+        @for (int i = 1; i <= Model.TotalPages; i++)
+        {
+            <li class="page-item @(i == Model.CurrentPage ? "active" : null)">
+                <a class="page-link" asp-action="Index"
+                   asp-route-page="@i"
+                   asp-route-searchTerm="@Model.SearchTerm"
+                   asp-route-sortColumn="@Model.SortColumn"
+                   asp-route-sortDirection="@Model.SortDirection">
+                    @i
+                </a>
+            </li>
+        }
+    </ul>
+</nav>
+
+<a asp-action="Create" class="btn btn-primary">
+    <i class="fas fa-plus"></i> New Setting
+</a>
+
+@await Component.InvokeAsync("RecycleBinButton")
+
+
+@* @if (User.HasClaim("permission", "recycle_bin_access") || User.HasClaim("permission", "full_admin_access"))
+{
+    <a asp-action="Deleted" class="btn btn-outline-secondary ms-2">
+        <i class="fas fa-trash-restore"></i> Recycle Bin
+    </a>
+} *@

@@ -1,6 +1,12 @@
 ﻿@{
     Layout = null;
     var title = ViewData["Title"] ?? "Admin";
+
+    var messages = new List<DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared.UiMessage>();
+    if (TempData["Messages"] is string json && !string.IsNullOrEmpty(json))
+    {
+        messages = System.Text.Json.JsonSerializer.Deserialize<List<DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared.UiMessage>>(json) ?? new();
+    }
 }
 
 <!DOCTYPE html>
@@ -67,8 +73,23 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="Admin" asp-controller="ContentItem" asp-action="Index">
-                                <i class="fas fa-file-alt me-2"></i> Content
+                            <a class="nav-link" asp-area="Admin" asp-controller="Pages" asp-action="Index">
+                                <i class="fas fa-file-alt me-2"></i> Pages
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="Admin" asp-controller="Menus" asp-action="Index">
+                                <i class="fas fa-file-alt me-2"></i> Menus
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="Admin" asp-controller="MenuItems" asp-action="Index">
+                                <i class="fas fa-file-alt me-2"></i> Menu Items
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="Admin" asp-controller="SiteSettings" asp-action="Index">
+                                <i class="fas fa-file-alt me-2"></i> Site Settings
                             </a>
                         </li>
                     </ul>
@@ -79,7 +100,9 @@
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
 
                 <!-- Centralized error/warning/success messages -->
-                @await Html.PartialAsync("_UiMessage", ViewData["Messages"] as List<DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared.UiMessage> ?? new())
+                @* @await Html.PartialAsync("_UiMessage", ViewData["Messages"] as List<DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared.UiMessage> ?? new()) *@
+                @await Html.PartialAsync("_UiMessage", messages)
+
 
                 @RenderBody()
             </main>

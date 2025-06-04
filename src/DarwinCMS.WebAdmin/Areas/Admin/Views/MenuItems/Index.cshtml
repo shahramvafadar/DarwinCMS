@@ -1,0 +1,88 @@
+﻿@model List<DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Menus.MenuItemListItemViewModel>
+
+@{
+    ViewData["Title"] = "Manage Menu Items";
+    var menuId = ViewBag.MenuId as Guid?;
+    var menuTitle = ViewBag.MenuTitle as string ?? "Unnamed Menu";
+}
+
+<h1 class="mb-4">
+    <i class="fas fa-sitemap me-2"></i> Items in <strong>@menuTitle</strong>
+</h1>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a asp-controller="Menus" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Menus
+    </a>
+
+    <a asp-action="Create" asp-route-menuId="@menuId" class="btn btn-success">
+        <i class="fas fa-plus me-1"></i> Add New Item
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">This menu has no items yet.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>URL / Page</th>
+                    <th>Status</th>
+                    <th>Order</th>
+                    <th class="text-center" style="width:160px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    @RenderItemRow(item, 0)
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@functions {
+    /// <summary>
+    /// Renders a single menu item row and its children using HtmlContentBuilder.
+    /// </summary>
+    private IHtmlContent RenderItemRow(
+        DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Menus.MenuItemListItemViewModel item,
+        int indent)
+    {
+        var html = new HtmlContentBuilder();
+
+        html.AppendHtmlLine("<tr>");
+        html.AppendHtmlLine($"<td style='padding-left:{indent * 20}px'>{item.Title}</td>");
+        html.AppendHtmlLine($"<td>{item.LinkType}</td>");
+        html.AppendHtmlLine($"<td>{(item.Url ?? "-")}</td>");
+
+        if (item.IsActive)
+            html.AppendHtmlLine("<td><span class='badge bg-success'>Active</span></td>");
+        else
+            html.AppendHtmlLine("<td><span class='badge bg-secondary'>Inactive</span></td>");
+
+        html.AppendHtmlLine($"<td>{item.DisplayOrder}</td>");
+
+        html.AppendHtmlLine("<td class='text-center'>");
+        html.AppendHtmlLine($"<a href='/Admin/MenuItems/Edit/{item.Id}' class='btn btn-sm btn-warning me-1'>");
+        html.AppendHtmlLine("<i class='fas fa-edit'></i> Edit</a>");
+        html.AppendHtmlLine($"<a href='/Admin/MenuItems/Delete/{item.Id}' class='btn btn-sm btn-danger'>");
+        html.AppendHtmlLine("<i class='fas fa-trash-alt'></i> Delete</a>");
+        html.AppendHtmlLine("</td>");
+        html.AppendHtmlLine("</tr>");
+
+        foreach (var child in item.Children.OrderBy(c => c.DisplayOrder))
+        {
+            html.AppendHtml(RenderItemRow(child, indent + 1));
+        }
+
+        return html;
+    }
+}

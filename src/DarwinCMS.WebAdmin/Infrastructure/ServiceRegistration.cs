@@ -1,6 +1,8 @@
 ﻿using DarwinCMS.Application.Services.Auth;
 using DarwinCMS.Application.Services.AccessControl;
 using DarwinCMS.Application.Services.Permissions;
+using DarwinCMS.Application.Services.Helpers;
+using DarwinCMS.Infrastructure.Services.Helpers;
 using DarwinCMS.Infrastructure.Services.Permissions;
 
 using DarwinCMS.WebAdmin.Infrastructure.Security;
@@ -14,8 +16,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace DarwinCMS.WebAdmin.Infrastructure;
 
 /// <summary>
-/// Registers WebAdmin-specific services such as login handlers, permission policies, 
-/// current user context services, and AutoMapper profiles.
+/// Registers WebAdmin-specific services such as login handlers, permission policies,
+/// current user context services, formatting helpers, and AutoMapper profiles.
 /// </summary>
 public static class ServiceRegistration
 {
@@ -39,9 +41,11 @@ public static class ServiceRegistration
         // Register custom permission-based authorization handler used for [HasPermission] attributes
         services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
+        // Register helper service to format dates, times, and numbers based on site-wide settings
+        services.AddScoped<IFormatHelperService, FormatHelperService>();
+
         // Register AutoMapper with profiles defined in the WebAdmin layer
         services.AddAutoMapper(typeof(AdminMapperProfile).Assembly);
-
 
         return services;
     }

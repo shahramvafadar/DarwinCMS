@@ -1,5 +1,7 @@
 ﻿using System.Linq.Expressions;
 
+using Ardalis.GuardClauses;
+
 using AutoMapper;
 
 using DarwinCMS.Application.Abstractions.Repositories;
@@ -76,6 +78,27 @@ public class PermissionService : IPermissionService
 
         await _permissionRepository.SaveChangesAsync(cancellationToken);
     }
+
+
+    /// <inheritdoc />
+    public async Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        // Load permission or throw if not found
+        var permission = await _permissionRepository.GetByIdAsync(id, cancellationToken)
+            ?? throw new NotFoundException("Permission not found.", id.ToString());
+
+        // Prevent deletion of system-defined permissions
+        if (permission.IsSystem)
+            throw new BusinessRuleException("System permissions cannot be deleted.");
+
+        // Perform logical deletion
+        await _permissionRepository.SoftDeleteAsync(id, cancellationToken);
+
+        // Commit changes to the database
+        await _permissionRepository.SaveChangesAsync(cancellationToken);
+    }
+
+
 
     /// <inheritdoc />
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)

@@ -15,6 +15,7 @@ intermediate/
 *.userosscache
 *.sln.docstates
 
+**/Logs/
 
 # Rider
 .idea/

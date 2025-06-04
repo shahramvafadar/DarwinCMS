@@ -1,13 +1,12 @@
-﻿using DarwinCMS.Domain.Interfaces;
-using DarwinCMS.Domain.ValueObjects;
+﻿using DarwinCMS.Domain.ValueObjects;
 using DarwinCMS.Shared.Security;
 
 namespace DarwinCMS.Domain.Entities;
 
 /// <summary>
-/// Represents a user of the system with credentials, profile, preferences, and roles.
+/// Represents a user of the system with profile, credentials, preferences, and security state.
 /// </summary>
-public class User : BaseEntity, IAuditableEntity
+public class User : BaseEntity
 {
     /// <summary>
     /// First name of the user.
@@ -25,7 +24,7 @@ public class User : BaseEntity, IAuditableEntity
     public string FullName => $"{FirstName} {LastName}".Trim();
 
     /// <summary>
-    /// Gender: e.g. "Male", "Female", "Other".
+    /// Gender of the user ("Male", "Female", "Other").
     /// </summary>
     public string Gender { get; private set; } = string.Empty;
 
@@ -35,38 +34,37 @@ public class User : BaseEntity, IAuditableEntity
     public DateTime BirthDate { get; private set; }
 
     /// <summary>
-    /// Optional mobile phone number in international format.
+    /// Optional mobile phone number.
     /// </summary>
     public string? MobilePhone { get; private set; }
 
     /// <summary>
-    /// Whether the user's mobile phone is confirmed.
+    /// Whether the user's mobile phone has been confirmed.
     /// </summary>
     public bool IsMobileConfirmed { get; private set; }
 
     /// <summary>
-    /// Whether the user's email is confirmed.
+    /// Whether the user's email has been confirmed.
     /// </summary>
     public bool IsEmailConfirmed { get; private set; }
 
     /// <summary>
-    /// Unique username (URL-safe).
+    /// Unique username.
     /// </summary>
     public string Username { get; private set; } = string.Empty;
 
     /// <summary>
-    /// Hashed password (never stored in plain text).
+    /// Hashed password.
     /// </summary>
     public string PasswordHash { get; private set; } = string.Empty;
 
     /// <summary>
-    /// User's email address (used for login or communication).
-    /// NOTE: Initialized with placeholder to satisfy nullable rules.
+    /// User's email address (as a value object).
     /// </summary>
     public Email Email { get; private set; } = Email.CreatePlaceholder();
 
     /// <summary>
-    /// Preferred language of the user (default is "en").
+    /// Preferred language of the user.
     /// </summary>
     public LanguageCode LanguageCode { get; private set; } = new("en");
 
@@ -76,52 +74,34 @@ public class User : BaseEntity, IAuditableEntity
     public string? ProfilePictureUrl { get; private set; }
 
     /// <summary>
-    /// Whether the user is currently active.
+    /// Whether the user is active.
     /// </summary>
     public bool IsActive { get; private set; } = true;
 
     /// <summary>
-    /// Indicates if the user is a system-critical account and cannot be deleted or disabled.
+    /// Whether the user is a system-critical account.
     /// </summary>
     public bool IsSystem { get; private set; }
 
     /// <summary>
-    /// Last login timestamp (UTC).
+    /// Timestamp of last login.
     /// </summary>
     public DateTime? LastLoginAt { get; private set; }
 
     /// <summary>
-    /// ID of the creator (admin or system).
-    /// </summary>
-    public Guid CreatedByUserId { get; private set; }
-
-    /// <summary>
-    /// ID of the last modifier (if applicable).
-    /// </summary>
-    public Guid? ModifiedByUserId { get; private set; }
-
-    /// <summary>
-    /// Navigation property for roles assigned to this user.
+    /// Roles assigned to this user.
     /// </summary>
     public ICollection<UserRole> UserRoles { get; private set; } = new List<UserRole>();
 
     /// <summary>
-    /// EF Core constructor (used for deserialization).
+    /// EF Core constructor.
     /// </summary>
     protected User() { }
 
     /// <summary>
     /// Creates a new user with required fields.
     /// </summary>
-    public User(
-        string firstName,
-        string lastName,
-        string gender,
-        DateTime birthDate,
-        string username,
-        Email email,
-        string passwordHash,
-        Guid createdByUserId)
+    public User(string firstName, string lastName, string gender, DateTime birthDate, string username, Email email, string passwordHash, Guid createdByUserId)
     {
         SetFirstName(firstName);
         SetLastName(lastName);
@@ -130,7 +110,7 @@ public class User : BaseEntity, IAuditableEntity
         SetUsername(username);
         SetEmail(email);
         SetPasswordHash(passwordHash);
-        CreatedByUserId = createdByUserId;
+        MarkAsCreated(createdByUserId);
     }
 
     /// <summary>
@@ -138,10 +118,8 @@ public class User : BaseEntity, IAuditableEntity
     /// </summary>
     public void SetFirstName(string firstName)
     {
-        FirstName = string.IsNullOrWhiteSpace(firstName)
-            ? throw new ArgumentException("Required", nameof(firstName))
-            : firstName.Trim();
-        MarkAsModified();
+        FirstName = string.IsNullOrWhiteSpace(firstName) ? throw new ArgumentException("First name is required.", nameof(firstName)) : firstName.Trim();
+        MarkAsModified(null);
     }
 
     /// <summary>
@@ -149,115 +127,104 @@ public class User : BaseEntity, IAuditableEntity
     /// </summary>
     public void SetLastName(string lastName)
     {
-        LastName = string.IsNullOrWhiteSpace(lastName)
-            ? throw new ArgumentException("Required", nameof(lastName))
-            : lastName.Trim();
-        MarkAsModified();
+        LastName = string.IsNullOrWhiteSpace(lastName) ? throw new ArgumentException("Last name is required.", nameof(lastName)) : lastName.Trim();
+        MarkAsModified(null);
     }
 
     /// <summary>
-    /// Updates gender string.
+    /// Updates the gender.
     /// </summary>
     public void SetGender(string gender)
     {
-        Gender = string.IsNullOrWhiteSpace(gender)
-            ? throw new ArgumentException("Required", nameof(gender))
-            : gender.Trim();
-        MarkAsModified();
+        Gender = string.IsNullOrWhiteSpace(gender) ? throw new ArgumentException("Gender is required.", nameof(gender)) : gender.Trim();
+        MarkAsModified(null);
     }
 
     /// <summary>
-    /// Sets the date of birth (cannot be future).
+    /// Sets the date of birth.
     /// </summary>
     public void SetBirthDate(DateTime birthDate)
     {
         if (birthDate > DateTime.UtcNow)
             throw new ArgumentException("Birth date cannot be in the future.", nameof(birthDate));
-
         BirthDate = birthDate;
-        MarkAsModified();
+        MarkAsModified(null);
     }
 
     /// <summary>
-    /// Sets the mobile phone number.
+    /// Sets the mobile phone.
     /// </summary>
     public void SetMobilePhone(string? phone)
     {
         MobilePhone = phone?.Trim();
-        MarkAsModified();
+        MarkAsModified(null);
     }
 
     /// <summary>
-    /// Marks the mobile as confirmed.
+    /// Confirms the mobile number.
     /// </summary>
     public void ConfirmMobile() => IsMobileConfirmed = true;
 
     /// <summary>
-    /// Marks the mobile as unconfirmed.
+    /// Unconfirms the mobile number.
     /// </summary>
     public void UnconfirmMobile() => IsMobileConfirmed = false;
 
     /// <summary>
-    /// Marks the email as confirmed.
+    /// Confirms the email address.
     /// </summary>
     public void ConfirmEmail() => IsEmailConfirmed = true;
 
     /// <summary>
-    /// Marks the email as unconfirmed.
+    /// Unconfirms the email address.
     /// </summary>
     public void UnconfirmEmail() => IsEmailConfirmed = false;
 
-
     /// <summary>
-    /// Updates the username (stored in lowercase).
+    /// Updates the username.
     /// </summary>
     public void SetUsername(string username)
     {
-        Username = string.IsNullOrWhiteSpace(username)
-            ? throw new ArgumentException("Required", nameof(username))
-            : username.Trim().ToLowerInvariant();
-        MarkAsModified();
+        Username = string.IsNullOrWhiteSpace(username) ? throw new ArgumentException("Username is required.", nameof(username)) : username.Trim().ToLowerInvariant();
+        MarkAsModified(null);
     }
 
     /// <summary>
-    /// Sets the user's email value object.
+    /// Sets the email.
     /// </summary>
     public void SetEmail(Email email)
     {
         Email = email;
-        MarkAsModified();
+        MarkAsModified(null);
     }
 
     /// <summary>
-    /// Sets a hashed password directly (no hashing).
+    /// Sets the password hash.
     /// </summary>
     public void SetPasswordHash(string hash)
     {
-        PasswordHash = string.IsNullOrWhiteSpace(hash)
-            ? throw new ArgumentException("Required", nameof(hash))
-            : hash.Trim();
-        MarkAsModified();
+        PasswordHash = string.IsNullOrWhiteSpace(hash) ? throw new ArgumentException("Password hash is required.", nameof(hash)) : hash.Trim();
+        MarkAsModified(null);
     }
 
     /// <summary>
-    /// Sets a new hashed password using the system password hasher.
+    /// Hashes and sets a new password.
     /// </summary>
     public void SetPassword(string plainTextPassword)
     {
         if (string.IsNullOrWhiteSpace(plainTextPassword))
             throw new ArgumentException("Password cannot be empty.", nameof(plainTextPassword));
-
         PasswordHash = PasswordHasher.Hash(plainTextPassword);
-        MarkAsModified();
+        MarkAsModified(null);
     }
 
     /// <summary>
-    /// Sets the user's preferred language.
+    /// Updates the preferred language.
     /// </summary>
     public void SetLanguage(LanguageCode code)
     {
         LanguageCode = code;
-        MarkAsModified();
+        MarkAsModified(null);
     }
 
     /// <summary>
@@ -266,35 +233,34 @@ public class User : BaseEntity, IAuditableEntity
     public void SetProfilePictureUrl(string? url)
     {
         ProfilePictureUrl = url?.Trim();
-        MarkAsModified();
+        MarkAsModified(null);
     }
 
     /// <summary>
-    /// Marks this user as a system-critical account.
+    /// Marks the user as a system account.
     /// </summary>
     public void MarkAsSystem()
     {
         IsSystem = true;
-        MarkAsModified();
+        MarkAsModified(null);
     }
 
-
     /// <summary>
-    /// Records the last login timestamp.
+    /// Records the user's last login timestamp.
     /// </summary>
     public void RecordLogin()
     {
         LastLoginAt = DateTime.UtcNow;
-        MarkAsModified();
+        MarkAsModified(null);
     }
 
     /// <summary>
-    /// Deactivates the user.
+    /// Deactivates the user (soft delete).
     /// </summary>
     public void Deactivate()
     {
         IsActive = false;
-        MarkAsModified();
+        MarkAsModified(null);
     }
 
     /// <summary>
@@ -303,21 +269,38 @@ public class User : BaseEntity, IAuditableEntity
     public void Activate()
     {
         IsActive = true;
-        MarkAsModified();
+        MarkAsModified(null);
     }
 
     /// <summary>
-    /// Sets the last modified user ID.
+    /// Marks the user as logically deleted.
+    /// </summary>
+    public void MarkAsDeleted(Guid? modifierId = null)
+    {
+        IsDeleted = true;
+        MarkAsModified(modifierId, isDeleted: true);
+    }
+
+    /// <summary>
+    /// Restores the user from soft-deleted state.
+    /// </summary>
+    public void Restore(Guid? modifierId = null)
+    {
+        IsDeleted = false;
+        MarkAsModified(modifierId, isDeleted: false);
+    }
+
+    /// <summary>
+    /// Updates the last modifier user ID.
     /// </summary>
     public void SetModifiedBy(Guid modifierId)
     {
         ModifiedByUserId = modifierId;
-        MarkAsModified();
+        MarkAsModified(modifierId);
     }
 
-
     /// <summary>
-    /// Returns formatted string summary of the user.
+    /// Returns a formatted string summary.
     /// </summary>
     public override string ToString() => $"{Username} ({FullName}) <{Email}>";
 }

@@ -1,0 +1,67 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.SiteSettings.SiteSettingEditViewModel
+
+@{
+    ViewData["Title"] = "Edit Site Setting";
+}
+
+<h1 class="mb-4">Edit Site Setting</h1>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="OldKey" />
+    <input type="hidden" asp-for="OldLanguageCode" />
+
+    <div class="mb-3">
+        <label asp-for="Key" class="form-label"></label>
+        <input asp-for="Key" class="form-control" />
+        <span asp-validation-for="Key" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="LanguageCode" class="form-label"></label>
+        <input asp-for="LanguageCode" class="form-control" />
+        <span asp-validation-for="LanguageCode" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Value" class="form-label"></label>
+        <input asp-for="Value" class="form-control" />
+        <span asp-validation-for="Value" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ValueType" class="form-label"></label>
+        <input asp-for="ValueType" class="form-control" />
+        <span asp-validation-for="ValueType" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Category" class="form-label"></label>
+        <input asp-for="Category" class="form-control" />
+        <span asp-validation-for="Category" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="IsSystem" class="form-check-input" disabled />
+        <label asp-for="IsSystem" class="form-check-label"></label>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Cancel
+        </a>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i> Save Changes
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

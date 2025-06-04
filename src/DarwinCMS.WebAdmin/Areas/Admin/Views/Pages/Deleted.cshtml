@@ -1,0 +1,69 @@
+﻿@model List<DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Pages.PageListItemViewModel>
+
+@{
+    ViewData["Title"] = "Recycle Bin";
+}
+
+<h1 class="mb-4">
+    <i class="fas fa-trash-restore me-2"></i> Recycle Bin
+</h1>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No deleted pages found.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Slug</th>
+                    <th>Language</th>
+                    <th>Published</th>
+                    <th>Deleted At</th>
+                    <th class="text-center" style="width: 280px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var deletedPage in Model)
+                {
+                    <tr>
+                        <td>@deletedPage.Title</td>
+                        <td>@deletedPage.Slug</td>
+                        <td>@deletedPage.LanguageCode</td>
+                        <td>
+                            @if (deletedPage.IsPublished)
+                            {
+                                <span class="badge bg-success">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No</span>
+                            }
+                        </td>
+                        <td>
+                            <format-date value="@deletedPage.ModifiedAt"></format-date>
+                        </td>
+                        <td class="text-center">
+                            <form asp-action="Restore" asp-route-id="@deletedPage.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="fas fa-undo"></i> Restore
+                                </button>
+                            </form>
+                            <form asp-action="HardDelete" asp-route-id="@deletedPage.Id" method="post" class="d-inline ms-1">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash-alt"></i> Delete Permanently
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+<a asp-action="Index" class="btn btn-outline-secondary mt-3">
+    <i class="fas fa-arrow-left me-1"></i> Back to Pages
+</a>

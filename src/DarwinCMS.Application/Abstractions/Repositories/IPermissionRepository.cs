@@ -18,6 +18,12 @@ public interface IPermissionRepository : IRepository<Permission>
     Task<Permission?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Marks a permission as deleted without removing it from the database.
+    /// </summary>
+    Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+
+    /// <summary>
     /// Executes the query and returns number of matching items.
     /// </summary>
     Task<int> CountAsync(IQueryable<Permission> query, CancellationToken cancellationToken = default);

@@ -51,6 +51,12 @@ public interface IPermissionService
     Task UpdateAsync(UpdatePermissionRequest request, Guid modifiedBy, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Marks the specified permission as logically deleted.
+    /// </summary>
+    Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+
+    /// <summary>
     /// Deletes a permission by ID if it is not marked as system-critical.
     /// </summary>
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);

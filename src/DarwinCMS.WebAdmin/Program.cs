@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using Serilog;
+using Serilog.Events;
 
 using DarwinCMS.Infrastructure;
 using DarwinCMS.Infrastructure.EF;
@@ -25,6 +27,18 @@ builder.Services.AddRazorPages();
 // Register shared infrastructure services (EF Core, repositories, etc.)
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddDarwinCmsServices(builder.Configuration);
+
+// Configure Serilog for logging to file and console
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug() // You can switch to Information in production
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
 
 // Register WebAdmin-specific services (AutoMapper, login, permissions, etc.)
 builder.Services.AddWebAdminServices();
@@ -116,20 +130,25 @@ using (var scope = app.Services.CreateScope())
 app.UseRequestLocalization();
 app.UseCors("DefaultCors");
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
-else
-{
-    app.UseMiddleware<GlobalExceptionMiddleware>();
-}
+// Register the ViewDataInitializerMiddleware before UseRouting or MVC
+app.UseMiddleware<ViewDataInitializerMiddleware>();
 
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
+
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    // GlobalExceptionMiddleware can be registered globally (after UseRouting and UseAuthentication)
+    app.UseMiddleware<GlobalExceptionMiddleware>();
+}
 
 // === Routing Configuration ===
 app.MapControllerRoute(

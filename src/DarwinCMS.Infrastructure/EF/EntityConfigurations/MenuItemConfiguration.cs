@@ -1,4 +1,5 @@
 ﻿using DarwinCMS.Domain.Entities;
+using DarwinCMS.Domain.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -6,15 +7,14 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace DarwinCMS.Infrastructure.EF.Configuration;
 
 /// <summary>
-/// EF Core Fluent API configuration for the MenuItem entity.
-/// Handles nested relationships and constraints.
+/// EF Core Fluent API configuration for MenuItem entity.
+/// Handles relationships, value conversions, and field constraints.
 /// </summary>
 public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
 {
     /// <summary>
-    /// Configures the EF Core mapping for the MenuItem entity.
+    /// Configures the MenuItem entity schema and constraints.
     /// </summary>
-    /// <param name="builder">The entity builder for MenuItem.</param>
     public void Configure(EntityTypeBuilder<MenuItem> builder)
     {
         builder.ToTable("MenuItems");
@@ -22,37 +22,44 @@ public class MenuItemConfiguration : IEntityTypeConfiguration<MenuItem>
         builder.HasKey(mi => mi.Id);
 
         builder.Property(mi => mi.Title)
-            .IsRequired()
-            .HasMaxLength(128);
+            .HasMaxLength(150)
+            .IsRequired();
 
         builder.Property(mi => mi.Icon)
-            .HasMaxLength(64);
+            .HasMaxLength(100);
+
+        builder.Property(mi => mi.DisplayOrder)
+            .IsRequired();
 
         builder.Property(mi => mi.Url)
-            .HasMaxLength(512);
+            .HasMaxLength(500);
 
-        builder.Property(mi => mi.VisibleForAuthenticatedOnly)
+        builder.Property(mi => mi.DisplayCondition)
+            .HasMaxLength(20)
             .IsRequired();
 
         builder.Property(mi => mi.IsActive)
             .IsRequired();
 
-        builder.Property(mi => mi.DisplayOrder)
-            .HasDefaultValue(0);
+        // 🔁 ValueObject: LinkType conversion to string
+        builder.Property(mi => mi.LinkType)
+            .HasConversion(
+                v => v.Value,
+                v => LinkType.From(v))
+            .HasMaxLength(20)
+            .IsRequired();
 
-        builder.Property(mi => mi.CreatedAt).IsRequired();
-        builder.Property(mi => mi.ModifiedAt);
+        // Relationships
+        builder.HasOne(mi => mi.Menu)
+            .WithMany(m => m.Items)
+            .HasForeignKey(mi => mi.MenuId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // Optional self-referencing relationship for nested menus
-        builder.HasOne(mi => mi.ParentItem)
-               .WithMany(mi => mi.Children)
-               .HasForeignKey(mi => mi.ParentItemId)
-               .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(mi => mi.Parent)
+            .WithMany(p => p.Children)
+            .HasForeignKey(mi => mi.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        // Optional reference to Page (nullable foreign key)
-        builder.HasOne(mi => mi.Page)
-               .WithMany()
-               .HasForeignKey(mi => mi.PageId)
-               .OnDelete(DeleteBehavior.SetNull);
+        builder.HasIndex(mi => new { mi.MenuId, mi.DisplayOrder });
     }
 }

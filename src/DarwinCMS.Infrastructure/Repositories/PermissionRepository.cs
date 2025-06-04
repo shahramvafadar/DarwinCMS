@@ -45,4 +45,24 @@ public class PermissionRepository : BaseRepository<Permission>, IPermissionRepos
     {
         return await query.AsNoTracking().ToListAsync(cancellationToken);
     }
+
+    /// <inheritdoc />
+    public override async Task<Permission?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _set.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
+    }
+
+
+    /// <inheritdoc />
+    public async Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var entity = await _set.FindAsync(new object[] { id }, cancellationToken);
+        if (entity != null)
+        {
+            entity.IsDeleted = true;
+            _set.Update(entity);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
 }

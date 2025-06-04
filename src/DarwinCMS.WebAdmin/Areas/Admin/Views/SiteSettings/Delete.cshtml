@@ -1,0 +1,41 @@
+﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.SiteSettings.SiteSettingListViewModel
+
+@{
+    ViewData["Title"] = "Delete Site Setting";
+}
+
+<h1 class="mb-4">Delete Site Setting</h1>
+
+@if (Model.IsSystem)
+{
+    <div class="alert alert-warning">
+        <i class="fas fa-lock"></i> This setting is system-protected and cannot be deleted.
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to List
+    </a>
+}
+else
+{
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="alert alert-danger">
+            <strong>Warning:</strong> Are you sure you want to delete the following setting?
+            <ul>
+                <li><strong>Key:</strong> @Model.Key</li>
+                <li><strong>Value:</strong> @Model.Value</li>
+                <li><strong>Category:</strong> @Model.Category</li>
+            </ul>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-check-circle me-1"></i> Yes, Delete
+            </button>
+        </div>
+    </form>
+}

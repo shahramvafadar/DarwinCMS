@@ -17,4 +17,9 @@ public interface IRoleRepository : IRepository<Role>
     /// Returns all system roles (undeletable, reserved by the system).
     /// </summary>
     Task<List<Role>> GetSystemRolesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns all roles that are marked as active.
+    /// </summary>
+    Task<List<Role>> GetAllActiveAsync(CancellationToken cancellationToken = default);
 }
