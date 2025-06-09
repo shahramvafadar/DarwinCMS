@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using DarwinCMS.Application.Abstractions.Repositories;
+﻿using DarwinCMS.Application.Abstractions.Repositories;
 using DarwinCMS.Domain.Entities;
 using DarwinCMS.Infrastructure.EF;
 using DarwinCMS.Infrastructure.Repositories.Common;
@@ -14,80 +8,30 @@ using Microsoft.EntityFrameworkCore;
 namespace DarwinCMS.Infrastructure.Repositories;
 
 /// <summary>
-/// Implementation of ISiteSettingRepository using EF Core.
-/// Supports basic CRUD, soft delete, restore, and listing deleted items.
+/// Entity Framework Core implementation of the <see cref="ISiteSettingRepository"/>.
+/// Provides data access, soft delete, restore, and permanent delete capabilities for <see cref="SiteSetting"/> entities.
 /// </summary>
 public class SiteSettingRepository : BaseRepository<SiteSetting>, ISiteSettingRepository
 {
     /// <summary>
-    /// Initializes the repository with the EF DbContext.
+    /// Initializes the repository with the EF Core database context.
     /// </summary>
+    /// <param name="db">The application's main EF DbContext.</param>
     public SiteSettingRepository(DarwinDbContext db) : base(db) { }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task<SiteSetting?> GetByKeyAsync(string key, string? languageCode, CancellationToken cancellationToken = default)
     {
-        return await _set.FirstOrDefaultAsync(
-            s => s.Key == key && s.LanguageCode == languageCode,
-            cancellationToken);
+        return await _set
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Key == key && s.LanguageCode == languageCode && !s.IsDeleted, cancellationToken);
     }
 
-
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task<List<SiteSetting>> GetByCategoryAsync(string category, CancellationToken cancellationToken = default)
     {
-        return await _set.Where(s => s.Category == category && !s.IsDeleted)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
-    }
-
-    /// <summary>
-    /// Marks a setting as logically deleted.
-    /// </summary>
-    public async Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        var setting = await _set.FindAsync(new object[] { id }, cancellationToken);
-        if (setting != null)
-        {
-            setting.MarkAsDeleted();
-            _set.Update(setting);
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-    }
-
-    /// <summary>
-    /// Restores a previously soft-deleted setting.
-    /// </summary>
-    public async Task RestoreAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        var setting = await _set.FirstOrDefaultAsync(s => s.Id == id && s.IsDeleted, cancellationToken);
-        if (setting != null)
-        {
-            setting.Restore();
-            _set.Update(setting);
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-    }
-
-    /// <summary>
-    /// Permanently deletes a setting from the database.
-    /// </summary>
-    public async Task HardDeleteAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        var setting = await _set.FirstOrDefaultAsync(s => s.Id == id && s.IsDeleted, cancellationToken);
-        if (setting != null)
-        {
-            _set.Remove(setting);
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-    }
-
-    /// <summary>
-    /// Retrieves all logically deleted settings.
-    /// </summary>
-    public async Task<List<SiteSetting>> GetDeletedAsync(CancellationToken cancellationToken = default)
-    {
-        return await _set.Where(s => s.IsDeleted)
+        return await _set
+            .Where(s => s.Category == category && !s.IsDeleted)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
@@ -101,7 +45,9 @@ public class SiteSettingRepository : BaseRepository<SiteSetting>, ISiteSettingRe
     /// <inheritdoc/>
     public async Task<List<SiteSetting>> ToListAsync(IQueryable<SiteSetting> query, CancellationToken cancellationToken = default)
     {
-        return await query.AsNoTracking().ToListAsync(cancellationToken);
+        return await query
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
     }
 
 }

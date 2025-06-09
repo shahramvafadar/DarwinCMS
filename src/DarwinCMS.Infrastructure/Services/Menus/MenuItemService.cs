@@ -9,7 +9,7 @@ namespace DarwinCMS.Infrastructure.Services.Menus;
 
 /// <summary>
 /// Service responsible for managing menu items.
-/// Handles creation, updating, deletion and tree-building logic.
+/// Handles creation, updating, soft deletion, restoration, hard deletion and tree-building logic.
 /// </summary>
 public class MenuItemService : IMenuItemService
 {
@@ -26,60 +26,75 @@ public class MenuItemService : IMenuItemService
     }
 
     /// <inheritdoc />
-    public async Task<List<MenuItemDto>> GetItemsByMenuIdAsync(Guid menuId)
+    public async Task<List<MenuItemDto>> GetItemsByMenuIdAsync(Guid menuId, CancellationToken cancellationToken = default)
     {
-        var items = await _menuItemRepository.GetByMenuIdAsync(menuId);
-        var roots = items.Where(i => i.ParentId == null).ToList();
-        return roots.Select(item => BuildTree(item, items)).ToList();
+        var items = await _menuItemRepository.GetByMenuIdAsync(menuId, cancellationToken);
+        var activeItems = items.Where(i => !i.IsDeleted).ToList();
+        var roots = activeItems.Where(i => i.ParentId == null).ToList();
+        return roots.Select(item => BuildTree(item, activeItems)).ToList();
     }
 
     /// <inheritdoc />
-    public async Task<MenuItemDto?> GetByIdAsync(Guid id)
+    public async Task<MenuItemDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await _menuItemRepository.GetWithChildrenAsync(id);
+        var entity = await _menuItemRepository.GetWithChildrenAsync(id, cancellationToken);
         return entity == null ? null : _mapper.Map<MenuItemDto>(entity);
     }
 
     /// <inheritdoc />
-    public async Task CreateAsync(CreateMenuItemDto dto)
+    public async Task<Guid> CreateAsync(CreateMenuItemDto dto, Guid createdByUserId, CancellationToken cancellationToken = default)
     {
         var entity = _mapper.Map<MenuItem>(dto);
-        await _menuItemRepository.AddAsync(entity);
-        await _menuItemRepository.SaveChangesAsync();
+        entity.MarkAsCreated(createdByUserId);
+        await _menuItemRepository.AddAsync(entity, cancellationToken);
+        await _menuItemRepository.SaveChangesAsync(cancellationToken);
+        return entity.Id;
     }
 
     /// <inheritdoc />
-    /// <inheritdoc />
-    public async Task UpdateAsync(UpdateMenuItemDto dto)
+    public async Task UpdateAsync(UpdateMenuItemDto dto, Guid modifiedByUserId, CancellationToken cancellationToken = default)
     {
-        var entity = await _menuItemRepository.GetByIdAsync(dto.Id);
+        var entity = await _menuItemRepository.GetByIdAsync(dto.Id, cancellationToken);
         if (entity == null)
             throw new InvalidOperationException("Menu item not found.");
 
-        entity.SetTitle(dto.Title);
-        entity.SetIcon(dto.Icon);
-        entity.SetLinkType(dto.LinkType);
-        entity.SetPage(dto.PageId);
-        entity.SetUrl(dto.Url);
-        entity.SetDisplayCondition(dto.DisplayCondition);
-        entity.SetDisplayOrder(dto.DisplayOrder);
-        entity.SetIsActive(dto.IsActive);
-        entity.SetParentId(dto.ParentId);
+        entity.SetTitle(dto.Title, modifiedByUserId);
+        entity.SetIcon(dto.Icon, modifiedByUserId);
+        entity.SetLinkType(dto.LinkType, modifiedByUserId);
+        entity.SetPage(dto.PageId, modifiedByUserId);
+        entity.SetUrl(dto.Url, modifiedByUserId);
+        entity.SetDisplayCondition(dto.DisplayCondition, modifiedByUserId);
+        entity.SetDisplayOrder(dto.DisplayOrder, modifiedByUserId);
+        entity.SetIsActive(dto.IsActive, modifiedByUserId);
+        entity.SetParentId(dto.ParentId, modifiedByUserId);
 
         _menuItemRepository.Update(entity);
-        await _menuItemRepository.SaveChangesAsync();
+        await _menuItemRepository.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
+    {
+        await _menuItemRepository.SoftDeleteAsync(id, userId, cancellationToken);
+    }
 
     /// <inheritdoc />
-    public async Task DeleteAsync(Guid id)
+    public async Task RestoreAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
     {
-        var entity = await _menuItemRepository.GetByIdAsync(id);
-        if (entity == null)
-            throw new InvalidOperationException("Menu item not found.");
+        await _menuItemRepository.RestoreAsync(id, userId, cancellationToken);
+    }
 
-        _menuItemRepository.Delete(entity);
-        await _menuItemRepository.SaveChangesAsync();
+    /// <inheritdoc />
+    public async Task HardDeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await _menuItemRepository.HardDeleteAsync(id, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<List<MenuItemDto>> GetDeletedAsync(CancellationToken cancellationToken = default)
+    {
+        var deletedItems = await _menuItemRepository.GetDeletedAsync(cancellationToken);
+        return _mapper.Map<List<MenuItemDto>>(deletedItems);
     }
 
     /// <summary>

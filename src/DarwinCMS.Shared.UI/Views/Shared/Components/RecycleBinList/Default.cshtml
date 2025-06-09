@@ -1,11 +1,6 @@
-﻿@model DarwinCMS.Shared.UI.ViewComponents.RecycleBinListViewModel<dynamic>
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@model DarwinCMS.Shared.UI.ViewComponents.RecycleBinListDisplayViewModel
 
-@* 
-    Recycle Bin List Table
-    - Two customizable fields
-    - DeletedAt and DeletedBy always included
-    - Actions: Restore / HardDelete
-*@
 <div class="table-responsive">
     <table class="table table-bordered table-hover align-middle">
         <thead class="table-light">
@@ -21,19 +16,19 @@
             @foreach (var item in Model.Items)
             {
                 <tr>
-                    <td>@Model.FirstFieldSelector(item)</td>
-                    <td>@Model.SecondFieldSelector(item)</td>
+                    <td>@item.FirstField</td>
+                    <td>@item.SecondField</td>
                     <td>
-                        <format-date value="@(item.DeletedAt)"></format-date>
+                        <format-date value="@item.DeletedAt"></format-date>@item.DeletedAt
                     </td>
-                    <td>@(item.DeletedBy ?? "N/A")</td>
+                    <td>@(item.DeletedByUserId.HasValue? item.DeletedByUserId.ToString() : "N/A")</td>
                     <td class="text-center">
-                        <form asp-controller="@Model.ControllerName" asp-action="@Model.RestoreAction" asp-route-id="@(item.Id)" method="post" class="d-inline">
+                        <form asp-controller="@Model.ControllerName" asp-action="Restore" asp-route-id="@item.Id" method="post" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-success">
                                 <i class="fas fa-undo"></i> Restore
                             </button>
                         </form>
-                        <form asp-controller="@Model.ControllerName" asp-action="@Model.HardDeleteAction" asp-route-id="@(item.Id)" method="post" class="d-inline ms-1">
+                        <form asp-controller="@Model.ControllerName" asp-action="HardDelete" asp-route-id="@item.Id" method="post" class="d-inline ms-1">
                             <button type="submit" class="btn btn-sm btn-danger">
                                 <i class="fas fa-trash-alt"></i> Delete Permanently
                             </button>

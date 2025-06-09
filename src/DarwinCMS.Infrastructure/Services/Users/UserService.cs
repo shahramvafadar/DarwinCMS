@@ -13,8 +13,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DarwinCMS.Infrastructure.Services.Users;
 
 /// <summary>
-/// Implements IUserService to provide user-related business logic,
-/// including creation, retrieval, update, deletion, role assignments, and list operations.
+/// Provides user-related business logic including creation, retrieval, update, deletion, role assignments, and listings.
 /// </summary>
 public class UserService : IUserService
 {
@@ -165,7 +164,6 @@ public class UserService : IUserService
         var users = await query.Skip(skip).Take(take).ToListAsync(cancellationToken);
 
         var result = new List<UserListDto>();
-
         foreach (var user in users)
         {
             var userDto = _mapper.Map<UserListDto>(user);
@@ -215,16 +213,13 @@ public class UserService : IUserService
         _userRepository.Update(user);
 
         var userRoles = await _userRoleRepository.GetByUserIdAsync(user.Id, null, cancellationToken)
-                ?? new List<UserRole>();
+                        ?? new List<UserRole>();
 
         foreach (var ur in userRoles.Where(r => r != null))
             _userRoleRepository.Delete(ur);
 
-
         foreach (var roleId in request.RoleIds)
-        {
             await _userRoleRepository.AddAsync(new UserRole(user.Id, roleId), cancellationToken);
-        }
 
         await _userRepository.SaveChangesAsync(cancellationToken);
     }
@@ -245,7 +240,6 @@ public class UserService : IUserService
         _userRepository.Delete(user);
         await _userRepository.SaveChangesAsync(cancellationToken);
     }
-
 
     /// <inheritdoc />
     public async Task<List<Guid>> GetUserPrimaryRoleIdsAsync(Guid userId, CancellationToken cancellationToken = default)

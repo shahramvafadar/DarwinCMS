@@ -15,9 +15,13 @@
         <i class="fas fa-arrow-left me-1"></i> Back to Menus
     </a>
 
-    <a asp-action="Create" asp-route-menuId="@menuId" class="btn btn-success">
-        <i class="fas fa-plus me-1"></i> Add New Item
-    </a>
+    <div>
+        <a asp-action="Create" asp-route-menuId="@menuId" class="btn btn-success me-1">
+            <i class="fas fa-plus me-1"></i> Add New Item
+        </a>
+
+        
+    </div>
 </div>
 
 @if (!Model.Any())
@@ -35,7 +39,7 @@ else
                     <th>URL / Page</th>
                     <th>Status</th>
                     <th>Order</th>
-                    <th class="text-center" style="width:160px;">Actions</th>
+                    <th class="text-center" style="width:180px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -50,7 +54,7 @@ else
 
 @functions {
     /// <summary>
-    /// Renders a single menu item row and its children using HtmlContentBuilder.
+    /// Renders a single menu item row and its children with indentation.
     /// </summary>
     private IHtmlContent RenderItemRow(
         DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Menus.MenuItemListItemViewModel item,
@@ -63,18 +67,15 @@ else
         html.AppendHtmlLine($"<td>{item.LinkType}</td>");
         html.AppendHtmlLine($"<td>{(item.Url ?? "-")}</td>");
 
-        if (item.IsActive)
-            html.AppendHtmlLine("<td><span class='badge bg-success'>Active</span></td>");
-        else
-            html.AppendHtmlLine("<td><span class='badge bg-secondary'>Inactive</span></td>");
+        html.AppendHtmlLine(item.IsActive
+            ? "<td><span class='badge bg-success'>Active</span></td>"
+            : "<td><span class='badge bg-secondary'>Inactive</span></td>");
 
         html.AppendHtmlLine($"<td>{item.DisplayOrder}</td>");
 
         html.AppendHtmlLine("<td class='text-center'>");
-        html.AppendHtmlLine($"<a href='/Admin/MenuItems/Edit/{item.Id}' class='btn btn-sm btn-warning me-1'>");
-        html.AppendHtmlLine("<i class='fas fa-edit'></i> Edit</a>");
-        html.AppendHtmlLine($"<a href='/Admin/MenuItems/Delete/{item.Id}' class='btn btn-sm btn-danger'>");
-        html.AppendHtmlLine("<i class='fas fa-trash-alt'></i> Delete</a>");
+        html.AppendHtmlLine($"<a href='/Admin/MenuItems/Edit/{item.Id}' class='btn btn-sm btn-warning me-1'><i class='fas fa-edit'></i> Edit</a>");
+        html.AppendHtmlLine($"<a href='/Admin/MenuItems/Delete/{item.Id}' class='btn btn-sm btn-danger'><i class='fas fa-trash-alt'></i> Delete</a>");
         html.AppendHtmlLine("</td>");
         html.AppendHtmlLine("</tr>");
 
@@ -86,3 +87,6 @@ else
         return html;
     }
 }
+
+<!-- Recycle Bin Button Component -->
+@await Component.InvokeAsync("RecycleBinButton")

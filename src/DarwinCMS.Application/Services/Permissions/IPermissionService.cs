@@ -53,7 +53,11 @@ public interface IPermissionService
     /// <summary>
     /// Marks the specified permission as logically deleted.
     /// </summary>
-    Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    /// <param name="id">The ID of the permission to soft delete.</param>
+    /// <param name="userId">The ID of the user performing the soft delete.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    Task SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken = default);
+
 
 
     /// <summary>

@@ -89,4 +89,28 @@ public interface IRoleService
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>List of all roles as lightweight DTOs.</returns>
     Task<List<RoleDto>> GetAllRolesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Performs a logical (soft) deletion of the specified role.
+    /// </summary>
+    /// <param name="id">The ID of the role to soft delete.</param>
+    /// <param name="performedByUserId">ID of the user performing the deletion.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    Task SoftDeleteAsync(Guid id, Guid performedByUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Restores a previously soft-deleted role.
+    /// </summary>
+    /// <param name="id">The ID of the role to restore.</param>
+    /// <param name="performedByUserId">ID of the user performing the restoration.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    Task RestoreAsync(Guid id, Guid performedByUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns a list of roles that have been logically deleted (soft-deleted).
+    /// </summary>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>List of soft-deleted roles as lightweight DTOs.</returns>
+    Task<List<RoleDto>> GetDeletedAsync(CancellationToken cancellationToken = default);
+
 }

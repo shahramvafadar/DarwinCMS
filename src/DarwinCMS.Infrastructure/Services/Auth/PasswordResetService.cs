@@ -23,12 +23,13 @@ public class PasswordResetService : IPasswordResetService
     /// <summary>
     /// Generates and stores a unique reset token with 30-minute expiration.
     /// </summary>
-    public async Task<PasswordResetToken> GenerateTokenAsync(string email)
+    public async Task<PasswordResetToken> GenerateTokenAsync(string email, Guid? createdByUserId = null)
     {
         var token = Guid.NewGuid().ToString("N");
         var expires = DateTime.UtcNow.AddMinutes(30);
 
-        var resetToken = new PasswordResetToken(email, token, expires);
+        // 🟢 Use the updated constructor that requires createdByUserId
+        var resetToken = new PasswordResetToken(email, token, expires, createdByUserId);
 
         await _tokenRepository.AddAsync(resetToken);
         await _tokenRepository.SaveChangesAsync();
@@ -51,9 +52,10 @@ public class PasswordResetService : IPasswordResetService
     /// <summary>
     /// Marks the token as used and saves changes.
     /// </summary>
-    public async Task InvalidateTokenAsync(PasswordResetToken token)
+    public async Task InvalidateTokenAsync(PasswordResetToken token, Guid? modifierId = null)
     {
-        token.MarkAsUsed();
+        // 🟢 Use the new MarkAsUsed method with modifierId
+        token.MarkAsUsed(modifierId);
         _tokenRepository.Update(token);
         await _tokenRepository.SaveChangesAsync();
     }

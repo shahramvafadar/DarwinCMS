@@ -13,7 +13,6 @@
         </a>
     </div>
 
-
     <!-- Search & Filter Form -->
     <form method="get" asp-action="Index" class="row mb-3 g-2 align-items-end">
         <div class="col-md-4">
@@ -150,9 +149,5 @@
     }
 </div>
 
-@if (User.HasClaim("permission", "recycle_bin_access") || User.HasClaim("permission", "full_admin_access"))
-{
-    <a asp-action="Deleted" class="btn btn-outline-secondary ms-2">
-        <i class="fas fa-trash-restore"></i> Recycle Bin
-    </a>
-}
+<!-- Recycle Bin Button Component -->
+@await Component.InvokeAsync("RecycleBinButton")

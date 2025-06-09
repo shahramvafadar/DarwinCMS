@@ -7,8 +7,8 @@ using Microsoft.EntityFrameworkCore;
 namespace DarwinCMS.Infrastructure.Repositories;
 
 /// <summary>
-/// EF Core implementation of IRolePermissionRepository.
-/// Handles assignment and lookup of permissions for roles.
+/// Provides Entity Framework Core implementation for managing role-permission assignments in the system.
+/// Includes operations for querying, adding, deleting, and verifying role-permission relationships.
 /// </summary>
 public class RolePermissionRepository : IRolePermissionRepository
 {
@@ -16,8 +16,9 @@ public class RolePermissionRepository : IRolePermissionRepository
     private readonly DbSet<RolePermission> _set;
 
     /// <summary>
-    /// Initializes repository with injected DbContext.
+    /// Initializes the repository with the database context.
     /// </summary>
+    /// <param name="db">The EF Core database context.</param>
     public RolePermissionRepository(DarwinDbContext db)
     {
         _db = db;

@@ -1,16 +1,16 @@
 ﻿using System;
 
+using DarwinCMS.Shared.ViewModels.Interfaces;
+
 namespace DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Pages;
 
 /// <summary>
-/// View model used for listing CMS pages in the admin UI.
-/// This is mapped from PageListItemDto and displayed in the Index.cshtml and Recycle Bin.
+/// View model used for listing CMS pages in the admin UI (Index and Recycle Bin).
 /// </summary>
-public class PageListItemViewModel
+public class PageListItemViewModel : ILogicalDeletableViewModel
 {
     /// <summary>
     /// Unique identifier of the page.
-    /// Used for linking to Edit/Delete actions.
     /// </summary>
     public Guid Id { get; set; }
 
@@ -40,7 +40,17 @@ public class PageListItemViewModel
     public DateTime? PublishDateUtc { get; set; }
 
     /// <summary>
-    /// Date and time when the page was last modified (used for showing delete time in Recycle Bin).
+    /// Date and time when the page was last modified.
     /// </summary>
     public DateTime? ModifiedAt { get; set; }
+
+    /// <summary>
+    /// The ID of the user who last modified (or deleted) the item.
+    /// </summary>
+    public Guid? ModifiedByUserId { get; set; }
+
+    /// <summary>
+    /// Indicates whether the page is logically (soft) deleted.
+    /// </summary>
+    public bool IsDeleted { get; set; }
 }

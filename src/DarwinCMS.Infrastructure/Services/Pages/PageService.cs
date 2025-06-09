@@ -12,7 +12,7 @@ namespace DarwinCMS.Infrastructure.Services.Pages;
 
 /// <summary>
 /// Application service for managing CMS Page entities.
-/// Handles creation, updating, deletion, soft deletion, and filtering.
+/// Handles creation, updating, deletion, soft deletion, restoration, and filtering.
 /// </summary>
 public class PageService : IPageService
 {
@@ -41,7 +41,9 @@ public class PageService : IPageService
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var term = filter.Search.ToLowerInvariant();
-            query = query.Where(p => p.Title.ToLowerInvariant().Contains(term) || p.Slug.Value.ToLowerInvariant().Contains(term));
+            query = query.Where(p =>
+                p.Title.ToLowerInvariant().Contains(term) ||
+                p.Slug.Value.ToLowerInvariant().Contains(term));
         }
 
         if (filter.IsPublished != null)
@@ -67,9 +69,10 @@ public class PageService : IPageService
     }
 
     /// <inheritdoc/>
-    public async Task<Guid> CreateAsync(CreatePageDto input, CancellationToken cancellationToken = default)
+    public async Task<Guid> CreateAsync(CreatePageDto input, Guid createdByUserId, CancellationToken cancellationToken = default)
     {
         var page = _mapper.Map<Page>(input);
+        page.MarkAsCreated(createdByUserId);
 
         var isUnique = await _pageRepository.IsSlugUniqueAsync(page.Slug.Value, page.LanguageCode);
         if (!isUnique)
@@ -82,7 +85,7 @@ public class PageService : IPageService
     }
 
     /// <inheritdoc/>
-    public async Task UpdateAsync(Guid id, UpdatePageDto input, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Guid id, UpdatePageDto input, Guid modifiedByUserId, CancellationToken cancellationToken = default)
     {
         var existing = await _pageRepository.GetByIdAsync(id, cancellationToken);
         if (existing == null)
@@ -93,26 +96,22 @@ public class PageService : IPageService
             throw new InvalidOperationException("Slug must be unique.");
 
         _mapper.Map(input, existing);
+        existing.SetModifiedBy(modifiedByUserId);
+
         _pageRepository.Update(existing);
         await _pageRepository.SaveChangesAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
-    public async Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
     {
-        var page = await _pageRepository.GetByIdAsync(id, cancellationToken);
-        if (page == null)
-            throw new InvalidOperationException("Page not found.");
-
-        page.MarkAsDeleted();
-        await _pageRepository.SaveChangesAsync(cancellationToken);
+        await _pageRepository.SoftDeleteAsync(id, userId, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async Task HardDeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         await _pageRepository.HardDeleteAsync(id, cancellationToken);
-        await _pageRepository.SaveChangesAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -123,13 +122,8 @@ public class PageService : IPageService
     }
 
     /// <inheritdoc/>
-    public async Task RestoreAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task RestoreAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
     {
-        var page = await _pageRepository.GetByIdAsync(id, cancellationToken);
-        if (page == null)
-            throw new InvalidOperationException("Page not found.");
-
-        page.Restore();
-        await _pageRepository.SaveChangesAsync(cancellationToken);
+        await _pageRepository.RestoreAsync(id, userId, cancellationToken);
     }
 }

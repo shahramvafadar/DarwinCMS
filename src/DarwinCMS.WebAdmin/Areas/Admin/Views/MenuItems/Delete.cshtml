@@ -37,7 +37,7 @@
     </dl>
 </div>
 
-<form asp-action="DeleteConfirmed" method="post">
+<form asp-action="Delete" method="post">
     <input type="hidden" asp-for="Id" />
     <input type="hidden" asp-for="MenuId" />
 
@@ -47,7 +47,7 @@
         </a>
 
         <button type="submit" class="btn btn-danger">
-            <i class="fas fa-check-circle me-1"></i> Yes, Delete Permanently
+            <i class="fas fa-check-circle me-1"></i> Yes, Delete
         </button>
     </div>
 </form>

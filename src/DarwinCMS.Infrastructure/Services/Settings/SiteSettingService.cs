@@ -72,7 +72,7 @@ public class SiteSettingService : ISiteSettingService
         return await _repository.GetDeletedAsync(cancellationToken);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async Task UpdateValueAsync(
         string oldKey,
         string? oldLanguageCode,
@@ -86,37 +86,40 @@ public class SiteSettingService : ISiteSettingService
         var setting = await _repository.GetByKeyAsync(oldKey, oldLanguageCode, cancellationToken)
             ?? throw new NotFoundException($"Setting not found with Key='{oldKey}' and Language='{oldLanguageCode}'", newKey);
 
-        // Update the editable fields
-        setting.SetKey(newKey);
-        setting.SetLanguageCode(newLanguageCode);
-        setting.SetValue(newValue);
-        setting.SetModifiedBy(modifiedBy);
+        // Update editable fields, including modifiedBy
+        setting.SetKey(newKey, modifiedBy);
+        setting.SetLanguageCode(newLanguageCode, modifiedBy);
+        setting.SetValue(newValue, modifiedBy);
 
-        // Save the changes
-        _repository.Update(setting); // or mark as modified
+        // Save changes
+        _repository.Update(setting);
         await _repository.SaveChangesAsync(cancellationToken);
-    }
 
+        // Invalidate cache
+        _cache.Remove(SiteSettingCacheKey(oldKey, oldLanguageCode));
+        _cache.Remove(SiteSettingCacheKey(newKey, newLanguageCode));
+    }
 
     /// <inheritdoc />
     public async Task CreateAsync(SiteSetting newSetting, CancellationToken cancellationToken = default)
     {
         await _repository.AddAsync(newSetting, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
+
         _cache.Remove(SiteSettingCacheKey(newSetting.Key, newSetting.LanguageCode));
     }
 
     /// <inheritdoc />
     public async Task SoftDeleteAsync(Guid id, Guid? deletedBy = null, CancellationToken cancellationToken = default)
     {
-        await _repository.SoftDeleteAsync(id, cancellationToken);
+        await _repository.SoftDeleteAsync(id, deletedBy ?? Guid.Empty, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task RestoreAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        await _repository.RestoreAsync(id, cancellationToken);
+        await _repository.RestoreAsync(id, Guid.Empty, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
     }
 
@@ -125,25 +128,6 @@ public class SiteSettingService : ISiteSettingService
     {
         await _repository.HardDeleteAsync(id, cancellationToken);
     }
-
-    /// <summary>
-    /// Retrieves a setting from cache or loads from repository.
-    /// </summary>
-    private async Task<SiteSetting?> GetCachedSettingAsync(string key, string? languageCode, CancellationToken cancellationToken)
-    {
-        string cacheKey = SiteSettingCacheKey(key, languageCode);
-        return await _cache.GetOrCreateAsync(cacheKey, async entry =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30);
-            return await _repository.GetByKeyAsync(key, languageCode, cancellationToken);
-        });
-    }
-
-    /// <summary>
-    /// Generates a unique cache key based on the setting key and language.
-    /// </summary>
-    private string SiteSettingCacheKey(string key, string? lang = null)
-        => $"SiteSetting::{key}::{lang?.ToLower() ?? "default"}";
 
     /// <inheritdoc/>
     public async Task<SiteSettingListResultDto> GetPagedListAsync(
@@ -198,4 +182,22 @@ public class SiteSettingService : ISiteSettingService
         return result;
     }
 
+    /// <summary>
+    /// Retrieves a setting from cache or loads from repository.
+    /// </summary>
+    private async Task<SiteSetting?> GetCachedSettingAsync(string key, string? languageCode, CancellationToken cancellationToken)
+    {
+        string cacheKey = SiteSettingCacheKey(key, languageCode);
+        return await _cache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30);
+            return await _repository.GetByKeyAsync(key, languageCode, cancellationToken);
+        });
+    }
+
+    /// <summary>
+    /// Generates a unique cache key based on the setting key and language.
+    /// </summary>
+    private string SiteSettingCacheKey(string key, string? lang = null)
+        => $"SiteSetting::{key}::{lang?.ToLower() ?? "default"}";
 }

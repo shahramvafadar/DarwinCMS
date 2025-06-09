@@ -1,10 +1,14 @@
-﻿namespace DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Menus;
+﻿using System;
+
+using DarwinCMS.Shared.ViewModels.Interfaces;
+
+namespace DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Menus;
 
 /// <summary>
 /// View model used for listing menus in the admin UI.
-/// This is mapped from MenuListItemDto and shown in Index.cshtml.
+/// Includes deletion metadata for Recycle Bin display.
 /// </summary>
-public class MenuListItemViewModel
+public class MenuListItemViewModel : ILogicalDeletableViewModel
 {
     /// <summary>
     /// Unique identifier of the menu.
@@ -31,4 +35,13 @@ public class MenuListItemViewModel
     /// This is useful for display purposes in the index table.
     /// </summary>
     public int ItemCount { get; set; }
+
+    /// <inheritdoc />
+    public bool IsDeleted { get; set; }
+
+    /// <inheritdoc />
+    public DateTime? ModifiedAt { get; set; }
+
+    /// <inheritdoc />
+    public Guid? ModifiedByUserId { get; set; }
 }

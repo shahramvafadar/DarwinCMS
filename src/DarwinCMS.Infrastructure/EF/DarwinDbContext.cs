@@ -127,20 +127,20 @@ public class DarwinDbContext : DbContext
     /// <returns>The number of affected rows after saving changes.</returns>
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
-        {
-            switch (entry.State)
-            {
-                case EntityState.Added:
-                    // CreatedAt is set by default constructor in BaseEntity; no action needed unless overridden
-                    break;
+        //foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+        //{
+        //    switch (entry.State)
+        //    {
+        //        case EntityState.Added:
+        //            // CreatedAt is set by default constructor in BaseEntity; no action needed unless overridden
+        //            break;
 
-                case EntityState.Modified:
-                    // Mark entity as modified using domain method (internal setter)
-                    entry.Entity.MarkAsModified();
-                    break;
-            }
-        }
+        //        case EntityState.Modified:
+        //            // Mark entity as modified using domain method (internal setter)
+        //            entry.Entity.MarkAsModified(null); // Pass null as default
+        //            break;
+        //    }
+        //}
 
         return await base.SaveChangesAsync(cancellationToken);
     }

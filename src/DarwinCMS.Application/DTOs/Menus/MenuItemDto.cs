@@ -64,6 +64,11 @@ public class MenuItemDto
     public bool IsActive { get; set; }
 
     /// <summary>
+    /// Indicates whether this item is logically (soft) deleted.
+    /// </summary>
+    public bool IsDeleted { get; set; }
+
+    /// <summary>
     /// Children items (for tree display in UI).
     /// </summary>
     public List<MenuItemDto> Children { get; set; } = new();

@@ -8,13 +8,15 @@ using Microsoft.EntityFrameworkCore;
 namespace DarwinCMS.Infrastructure.Repositories;
 
 /// <summary>
-/// Default implementation of IPermissionRepository using EF Core.
+/// EF Core implementation of <see cref="IPermissionRepository"/>.
+/// Provides filtering, counting, and general data access for permissions.
 /// </summary>
 public class PermissionRepository : BaseRepository<Permission>, IPermissionRepository
 {
     /// <summary>
     /// Initializes the repository with the provided DarwinDbContext.
     /// </summary>
+    /// <param name="db">The EF Core DbContext for DarwinCMS.</param>
     public PermissionRepository(DarwinDbContext db) : base(db) { }
 
     /// <inheritdoc />
@@ -22,6 +24,7 @@ public class PermissionRepository : BaseRepository<Permission>, IPermissionRepos
     {
         var query = _set.AsQueryable();
 
+        // Filter by module if provided
         if (!string.IsNullOrWhiteSpace(module))
             query = query.Where(p => p.Module == module);
 
@@ -31,7 +34,9 @@ public class PermissionRepository : BaseRepository<Permission>, IPermissionRepos
     /// <inheritdoc />
     public async Task<Permission?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
     {
-        return await _set.FirstOrDefaultAsync(p => p.Name == name, cancellationToken);
+        return await _set
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Name == name && !p.IsDeleted, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -49,20 +54,8 @@ public class PermissionRepository : BaseRepository<Permission>, IPermissionRepos
     /// <inheritdoc />
     public override async Task<Permission?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _set.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
+        return await _set
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
     }
-
-
-    /// <inheritdoc />
-    public async Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        var entity = await _set.FindAsync(new object[] { id }, cancellationToken);
-        if (entity != null)
-        {
-            entity.IsDeleted = true;
-            _set.Update(entity);
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-    }
-
 }

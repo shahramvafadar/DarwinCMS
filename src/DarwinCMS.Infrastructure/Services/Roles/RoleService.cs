@@ -172,4 +172,31 @@ public class RoleService : IRoleService
             Roles = _mapper.Map<List<RoleDto>>(pagedRoles)
         };
     }
+
+    /// <summary>
+    /// Performs a logical (soft) deletion of a role.
+    /// </summary>
+    public async Task SoftDeleteAsync(Guid id, Guid performedByUserId, CancellationToken cancellationToken = default)
+    {
+        await _roleRepository.SoftDeleteAsync(id, performedByUserId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Restores a previously soft-deleted role.
+    /// </summary>
+    public async Task RestoreAsync(Guid id, Guid performedByUserId, CancellationToken cancellationToken = default)
+    {
+        await _roleRepository.RestoreAsync(id, performedByUserId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Returns a list of roles that have been logically deleted (soft-deleted).
+    /// Useful for displaying Recycle Bin contents.
+    /// </summary>
+    public async Task<List<RoleDto>> GetDeletedAsync(CancellationToken cancellationToken = default)
+    {
+        var deletedRoles = await _roleRepository.GetDeletedAsync(cancellationToken);
+        return _mapper.Map<List<RoleDto>>(deletedRoles);
+    }
+
 }

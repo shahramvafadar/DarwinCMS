@@ -30,7 +30,7 @@ public static class InitialSystemDataSeeder
         void AddPermission(string name, string display)
         {
             var p = new Permission(name, SystemConstants.SystemUserId, display);
-            p.MarkAsSystem();
+            p.MarkAsSystem(null);
             permissions.Add(p);
         }
 
@@ -46,10 +46,10 @@ public static class InitialSystemDataSeeder
 
         // === Roles ===
         var adminRole = new Role("Administrators", SystemConstants.SystemUserId, "System Administrators");
-        adminRole.MarkAsSystem();
+        adminRole.MarkAsSystem(null);
 
         var memberRole = new Role("Members", SystemConstants.SystemUserId, "Site Members");
-        memberRole.MarkAsSystem();
+        memberRole.MarkAsSystem(null);
 
         await context.Roles.AddRangeAsync(adminRole, memberRole);
 
@@ -115,7 +115,7 @@ public static class InitialSystemDataSeeder
 
         foreach (var setting in settings)
         {
-            setting.MarkAsSystem();
+            setting.MarkAsSystem(null);
         }
 
         await context.SiteSettings.AddRangeAsync(settings);
@@ -124,7 +124,7 @@ public static class InitialSystemDataSeeder
         var homeHtml = File.ReadAllText("SeedFiles/Home.html");
 
         var homePage = new Page("Welcome to Darwin CMS", new Slug("home"), "en", homeHtml, true, SystemConstants.SystemUserId);
-        homePage.MarkAsSystem();
+        homePage.MarkAsSystem(null);
 
         var contactPage = new Page("Contact Us", new Slug("contact"), "en", "Contact form or details will be added here.", true, SystemConstants.SystemUserId);
         var aboutPage = new Page("About Us", new Slug("about"), "en", "Basic description about the company.", true, SystemConstants.SystemUserId);
@@ -138,33 +138,33 @@ public static class InitialSystemDataSeeder
 
         // === Menus ===
         var mainMenu = new Menu("Main Menu", "header", "en", SystemConstants.SystemUserId);
-        mainMenu.MarkAsSystem();
+        mainMenu.MarkAsSystem(null);
 
         var footerMenu = new Menu("Footer Menu", "footer", "en", SystemConstants.SystemUserId);
-        footerMenu.MarkAsSystem();
+        footerMenu.MarkAsSystem(null);
 
         await context.Menus.AddRangeAsync(new[] { mainMenu, footerMenu });
         await context.SaveChangesAsync();
 
         var homeItem = new MenuItem(mainMenu.Id, "Home", LinkType.Internal, null, null, 0, "always", true, SystemConstants.SystemUserId);
-        homeItem.SetPage(homePage.Id);
+        homeItem.SetPage(homePage.Id, null);
 
         var blogItem = new MenuItem(mainMenu.Id, "Blog", LinkType.Module, "blog", null, 1, "always", true, SystemConstants.SystemUserId);
 
         var contactItem = new MenuItem(mainMenu.Id, "Contact", LinkType.Internal, null, null, 2, "always", true, SystemConstants.SystemUserId);
-        contactItem.SetPage(contactPage.Id);
+        contactItem.SetPage(contactPage.Id, null);
 
         var aboutItem = new MenuItem(footerMenu.Id, "About", LinkType.Internal, null, null, 0, "always", true, SystemConstants.SystemUserId);
-        aboutItem.SetPage(aboutPage.Id);
+        aboutItem.SetPage(aboutPage.Id, null);
 
         var privacyItem = new MenuItem(footerMenu.Id, "Privacy Policy", LinkType.Internal, null, null, 1, "always", true, SystemConstants.SystemUserId);
-        privacyItem.SetPage(privacyPage.Id);
+        privacyItem.SetPage(privacyPage.Id, null);
 
         var impressumItem = new MenuItem(footerMenu.Id, "Impressum", LinkType.Internal, null, null, 2, "always", true, SystemConstants.SystemUserId);
-        impressumItem.SetPage(impressumPage.Id);
+        impressumItem.SetPage(impressumPage.Id, null);
 
         var termsItem = new MenuItem(footerMenu.Id, "Terms of Service", LinkType.Internal, null, null, 3, "always", true, SystemConstants.SystemUserId);
-        termsItem.SetPage(termsPage.Id);
+        termsItem.SetPage(termsPage.Id, null);
 
         var menuItems = new List<MenuItem>
         {

@@ -86,12 +86,5 @@
     <i class="fas fa-plus"></i> New Setting
 </a>
 
+<!-- Recycle Bin Button Component -->
 @await Component.InvokeAsync("RecycleBinButton")
-
-
-@* @if (User.HasClaim("permission", "recycle_bin_access") || User.HasClaim("permission", "full_admin_access"))
-{
-    <a asp-action="Deleted" class="btn btn-outline-secondary ms-2">
-        <i class="fas fa-trash-restore"></i> Recycle Bin
-    </a>
-} *@

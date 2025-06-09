@@ -81,7 +81,7 @@ public class PermissionService : IPermissionService
 
 
     /// <inheritdoc />
-    public async Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
     {
         // Load permission or throw if not found
         var permission = await _permissionRepository.GetByIdAsync(id, cancellationToken)
@@ -92,11 +92,12 @@ public class PermissionService : IPermissionService
             throw new BusinessRuleException("System permissions cannot be deleted.");
 
         // Perform logical deletion
-        await _permissionRepository.SoftDeleteAsync(id, cancellationToken);
+        await _permissionRepository.SoftDeleteAsync(id, userId, cancellationToken);
 
         // Commit changes to the database
         await _permissionRepository.SaveChangesAsync(cancellationToken);
     }
+
 
 
 

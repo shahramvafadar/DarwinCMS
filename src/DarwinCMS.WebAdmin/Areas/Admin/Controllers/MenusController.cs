@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 
 using DarwinCMS.Application.DTOs.Menus;
+using DarwinCMS.Application.Services.AccessControl;
 using DarwinCMS.Application.Services.Menus;
 using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Menus;
 using DarwinCMS.WebAdmin.Infrastructure.Helpers;
+using DarwinCMS.WebAdmin.Infrastructure.Security;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,14 +20,19 @@ public class MenusController : Controller
 {
     private readonly IMenuService _menuService;
     private readonly IMapper _mapper;
+    private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MenusController"/> class.
     /// </summary>
-    public MenusController(IMenuService menuService, IMapper mapper)
+    public MenusController(
+        IMenuService menuService,
+        IMapper mapper,
+        ICurrentUserService currentUserService)
     {
         _menuService = menuService;
         _mapper = mapper;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -59,7 +66,8 @@ public class MenusController : Controller
             return View(viewModel);
 
         var dto = _mapper.Map<CreateMenuDto>(viewModel);
-        await _menuService.CreateAsync(dto);
+        var userId = _currentUserService.UserId ?? throw new InvalidOperationException("User not authenticated.");
+        await _menuService.CreateAsync(dto, userId);
 
         this.AddSuccess("Menu created successfully.");
         return RedirectToAction(nameof(Index));
@@ -93,7 +101,8 @@ public class MenusController : Controller
             return View(viewModel);
 
         var dto = _mapper.Map<UpdateMenuDto>(viewModel);
-        await _menuService.UpdateAsync(viewModel.Id, dto);
+        var userId = _currentUserService.UserId ?? throw new InvalidOperationException("User not authenticated.");
+        await _menuService.UpdateAsync(viewModel.Id, dto, userId);
 
         this.AddSuccess("Menu updated successfully.");
         return RedirectToAction(nameof(Index));
@@ -117,15 +126,57 @@ public class MenusController : Controller
     }
 
     /// <summary>
-    /// Confirms and performs menu deletion.
+    /// Soft deletes a menu.
     /// </summary>
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(Guid id)
+    public async Task<IActionResult> SoftDeleteConfirmed(Guid id)
     {
-        await _menuService.DeleteAsync(id);
+        var userId = _currentUserService.UserId ?? throw new InvalidOperationException("User not authenticated.");
+        await _menuService.SoftDeleteAsync(id, userId);
 
-        this.AddSuccess("Menu deleted successfully.");
+        this.AddSuccess("Menu moved to recycle bin.");
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// Displays the recycle bin list of deleted menus.
+    /// </summary>
+    [HttpGet]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> Deleted()
+    {
+        var deletedMenus = await _menuService.GetDeletedAsync();
+        var viewModel = _mapper.Map<List<MenuListItemViewModel>>(deletedMenus);
+        return View(viewModel);
+    }
+
+    /// <summary>
+    /// Restores a previously soft-deleted menu.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> Restore(Guid id)
+    {
+        var userId = _currentUserService.UserId ?? throw new InvalidOperationException("User not authenticated.");
+        await _menuService.RestoreAsync(id, userId);
+
+        this.AddSuccess("Menu restored successfully.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// Permanently deletes a menu from the system.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> HardDelete(Guid id)
+    {
+        await _menuService.HardDeleteAsync(id);
+
+        this.AddSuccess("Menu permanently deleted.");
+        return RedirectToAction(nameof(Deleted));
     }
 }

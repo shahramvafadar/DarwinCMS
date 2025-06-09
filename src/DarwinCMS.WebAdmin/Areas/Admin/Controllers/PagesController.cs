@@ -1,8 +1,7 @@
-﻿using System.Threading;
-
-using AutoMapper;
+﻿using AutoMapper;
 
 using DarwinCMS.Application.DTOs.Pages;
+using DarwinCMS.Application.Services.AccessControl;
 using DarwinCMS.Application.Services.Common;
 using DarwinCMS.Application.Services.Pages;
 using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Pages;
@@ -14,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DarwinCMS.WebAdmin.Areas.Admin.Controllers;
 
 /// <summary>
-/// Admin controller for managing CMS pages, including listing, creating, editing, soft deletion, and restoration.
+/// Admin controller for managing CMS pages, including listing, creating, editing, soft deletion, restoration, and permanent deletion.
 /// </summary>
 [Area("Admin")]
 public class PagesController : Controller
@@ -22,18 +21,21 @@ public class PagesController : Controller
     private readonly IPageService _pageService;
     private readonly IMapper _mapper;
     private readonly ILanguageProvider _languageProvider;
+    private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PagesController"/> class.
     /// </summary>
-    /// <param name="pageService">The service handling page operations.</param>
-    /// <param name="mapper">AutoMapper instance for object mapping.</param>
-    /// <param name="languageProvider">Language provider for localization settings.</param>
-    public PagesController(IPageService pageService, IMapper mapper, ILanguageProvider languageProvider)
+    public PagesController(
+        IPageService pageService,
+        IMapper mapper,
+        ILanguageProvider languageProvider,
+        ICurrentUserService currentUserService)
     {
         _pageService = pageService;
         _mapper = mapper;
         _languageProvider = languageProvider;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -100,10 +102,11 @@ public class PagesController : Controller
             return View(viewModel);
 
         var dto = _mapper.Map<CreatePageDto>(viewModel);
-        await _pageService.CreateAsync(dto);
+        var userId = _currentUserService.UserId ?? throw new InvalidOperationException("User not authenticated.");
+        await _pageService.CreateAsync(dto, userId);
 
         this.AddSuccess("Page created successfully.");
-        return RedirectToAction("Index");
+        return RedirectToAction(nameof(Index));
     }
 
     /// <summary>
@@ -135,10 +138,11 @@ public class PagesController : Controller
             return View(viewModel);
 
         var dto = _mapper.Map<UpdatePageDto>(viewModel);
-        await _pageService.UpdateAsync(id, dto);
+        var userId = _currentUserService.UserId ?? throw new InvalidOperationException("User not authenticated.");
+        await _pageService.UpdateAsync(id, dto, userId);
 
         this.AddSuccess("Page updated successfully.");
-        return RedirectToAction("Index");
+        return RedirectToAction(nameof(Index));
     }
 
     /// <summary>
@@ -151,9 +155,7 @@ public class PagesController : Controller
         if (page == null)
             return NotFound();
 
-        // Map to a simpler ViewModel for deletion confirmation
         var viewModel = _mapper.Map<PageListItemViewModel>(page);
-
         return View(viewModel);
     }
 
@@ -162,12 +164,13 @@ public class PagesController : Controller
     /// </summary>
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(Guid id)
+    public async Task<IActionResult> SoftDeleteConfirmed(Guid id)
     {
-        await _pageService.SoftDeleteAsync(id);
+        var userId = _currentUserService.UserId ?? throw new InvalidOperationException("User not authenticated.");
+        await _pageService.SoftDeleteAsync(id, userId);
 
         this.AddSuccess("Page moved to recycle bin.");
-        return RedirectToAction("Index");
+        return RedirectToAction(nameof(Index));
     }
 
     /// <summary>
@@ -190,9 +193,25 @@ public class PagesController : Controller
     [HasPermission("recycle_bin_access")]
     public async Task<IActionResult> Restore(Guid id)
     {
-        await _pageService.RestoreAsync(id);
+        var userId = _currentUserService.UserId ?? throw new InvalidOperationException("User not authenticated.");
+        await _pageService.RestoreAsync(id, userId);
+
         this.AddSuccess("Page restored successfully.");
-        return RedirectToAction("Index");
+        return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// Permanently deletes a page from the system.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> HardDelete(Guid id)
+    {
+        await _pageService.HardDeleteAsync(id);
+
+        this.AddSuccess("Page permanently deleted.");
+        return RedirectToAction(nameof(Deleted));
     }
 
     /// <summary>
