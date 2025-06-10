@@ -8,9 +8,7 @@ using AutoMapper;
 using DarwinCMS.Application.DTOs.SiteSettings;
 using DarwinCMS.Application.Services.AccessControl;
 using DarwinCMS.Application.Services.Settings;
-using DarwinCMS.Infrastructure.Services.Settings;
 using DarwinCMS.Shared.Exceptions;
-using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared;
 using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.SiteSettings;
 using DarwinCMS.WebAdmin.Infrastructure.Helpers;
 using DarwinCMS.WebAdmin.Infrastructure.Security;
@@ -33,10 +31,10 @@ public class SiteSettingsController : Controller
     /// <summary>
     /// Initializes a new instance of the <see cref="SiteSettingsController"/> class.
     /// </summary>
-    /// <param name="siteSettingService">The service used to manage site settings.</param>
-    /// <param name="mapper">The object mapper used for converting between domain models and view models.</param>
-    /// <param name="currentUser">The service providing information about the current user.</param>
-    public SiteSettingsController(ISiteSettingService siteSettingService, IMapper mapper, ICurrentUserService currentUser)
+    public SiteSettingsController(
+        ISiteSettingService siteSettingService,
+        IMapper mapper,
+        ICurrentUserService currentUser)
     {
         _siteSettingService = siteSettingService;
         _mapper = mapper;
@@ -77,7 +75,6 @@ public class SiteSettingsController : Controller
 
         return View(viewModel);
     }
-
 
     /// <summary>
     /// Shows the form to create a new setting.
@@ -120,13 +117,11 @@ public class SiteSettingsController : Controller
             return NotFound();
 
         var viewModel = _mapper.Map<SiteSettingEditViewModel>(setting);
-        // Initialize OldKey and OldLanguageCode for update
         viewModel.OldKey = setting.Key;
         viewModel.OldLanguageCode = setting.LanguageCode;
 
         return View(viewModel);
     }
-
 
     /// <summary>
     /// Processes update of an existing site setting.
@@ -144,11 +139,11 @@ public class SiteSettingsController : Controller
             dto.ModifiedByUserId = _currentUser.UserId ?? Guid.Empty;
 
             await _siteSettingService.UpdateValueAsync(
-                model.OldKey,               // Old Key for search
-                model.OldLanguageCode,      // Old LanguageCode for search
-                model.Key,                  // New Key
-                model.LanguageCode,         // New LanguageCode
-                dto.Value,                  // New Value
+                model.OldKey,
+                model.OldLanguageCode,
+                model.Key,
+                model.LanguageCode,
+                dto.Value,
                 dto.ModifiedByUserId,
                 cancellationToken);
 
@@ -161,7 +156,6 @@ public class SiteSettingsController : Controller
             return View(model);
         }
     }
-
 
     /// <summary>
     /// Shows a confirmation page before logically deleting a site setting.
@@ -184,12 +178,12 @@ public class SiteSettingsController : Controller
     /// </summary>
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> SoftDeleteConfirmed(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            await _siteSettingService.SoftDeleteAsync(id, _currentUser.UserId, cancellationToken);
-            this.AddSuccess("Setting deleted successfully.");
+            await _siteSettingService.SoftDeleteAsync(id, _currentUser.UserId ?? Guid.Empty, cancellationToken);
+            this.AddSuccess("Setting moved to recycle bin.");
         }
         catch (BusinessRuleException ex)
         {
@@ -219,9 +213,21 @@ public class SiteSettingsController : Controller
     [HasPermission("recycle_bin_access")]
     public async Task<IActionResult> Restore(Guid id, CancellationToken cancellationToken)
     {
-        await _siteSettingService.RestoreAsync(id, cancellationToken);
+        await _siteSettingService.RestoreAsync(id, _currentUser.UserId ?? Guid.Empty, cancellationToken);
         this.AddSuccess("Setting restored successfully.");
         return RedirectToAction(nameof(Deleted));
     }
 
+    /// <summary>
+    /// Permanently deletes a site setting.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> HardDelete(Guid id, CancellationToken cancellationToken)
+    {
+        await _siteSettingService.HardDeleteAsync(id, cancellationToken);
+        this.AddSuccess("Setting permanently deleted.");
+        return RedirectToAction(nameof(Deleted));
+    }
 }

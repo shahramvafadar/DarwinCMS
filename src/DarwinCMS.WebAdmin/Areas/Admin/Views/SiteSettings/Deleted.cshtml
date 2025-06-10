@@ -1,44 +1,30 @@
 ﻿@model List<DarwinCMS.WebAdmin.Areas.Admin.ViewModels.SiteSettings.SiteSettingListViewModel>
 
 @{
-    ViewData["Title"] = "Deleted Site Settings (Recycle Bin)";
+    ViewData["Title"] = "Recycle Bin";
 }
 
-<h1 class="mb-4">Deleted Site Settings</h1>
+<h1 class="mb-4">
+    <i class="fas fa-trash-restore me-2"></i> Recycle Bin
+</h1>
 
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No deleted site settings found.</div>
+}
+else
+{
+    @await Component.InvokeAsync("RecycleBinList", new
+    {
+        items = Model,
+        controllerName = "SiteSettings",
+        firstFieldName = "Key",
+        secondFieldName = "Category",
+        firstPropertyName = "Key",
+        secondPropertyName = "Category"
+    })
+}
 
-
-<table class="table table-hover table-bordered">
-    <thead class="table-light">
-        <tr>
-            <th>Key</th>
-            <th>Category</th>
-            <th>Value</th>
-            <th>Language</th>
-            <th class="text-end">Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Key</td>
-                <td>@item.Category</td>
-                <td>@item.Value</td>
-                <td>@item.LanguageCode</td>
-                <td class="text-end">
-                    <form asp-action="Restore" method="post" class="d-inline">
-                        <input type="hidden" name="id" value="@item.Id" />
-                        <button type="submit" class="btn btn-sm btn-success">
-                            <i class="fas fa-undo"></i> Restore
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-<a asp-action="Index" class="btn btn-outline-secondary">
+<a asp-action="Index" class="btn btn-outline-secondary mt-3">
     <i class="fas fa-arrow-left me-1"></i> Back to Active List
 </a>

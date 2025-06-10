@@ -34,22 +34,14 @@ public interface ISiteSettingService
     /// Updates a site setting's key, language code, value, and other metadata.
     /// Uses OldKey and OldLanguageCode for lookup to support editable composite keys.
     /// </summary>
-    /// <param name="oldKey">The old key of the setting for composite lookup.</param>
-    /// <param name="oldLanguageCode">The old language code of the setting for composite lookup.</param>
-    /// <param name="newKey">The new key to update.</param>
-    /// <param name="newLanguageCode">The new language code to update.</param>
-    /// <param name="newValue">The new value to update.</param>
-    /// <param name="modifiedBy">The user who modifies the setting.</param>
-    /// <param name="cancellationToken">Cancellation token for async operation.</param>
     Task UpdateValueAsync(
         string oldKey,
         string? oldLanguageCode,
         string newKey,
         string? newLanguageCode,
         string newValue,
-        Guid modifiedBy,
+        Guid modifiedByUserId,
         CancellationToken cancellationToken = default);
-
 
     /// <summary>
     /// Creates a new setting entry.
@@ -59,12 +51,18 @@ public interface ISiteSettingService
     /// <summary>
     /// Soft deletes the specified setting. System-protected entries cannot be deleted.
     /// </summary>
-    Task SoftDeleteAsync(Guid id, Guid? deletedBy = null, CancellationToken cancellationToken = default);
+    /// <param name="id">The ID of the setting to soft delete.</param>
+    /// <param name="deletedByUserId">The ID of the user performing the deletion.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    Task SoftDeleteAsync(Guid id, Guid deletedByUserId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Restores a previously soft-deleted setting.
     /// </summary>
-    Task RestoreAsync(Guid id, CancellationToken cancellationToken = default);
+    /// <param name="id">The ID of the setting to restore.</param>
+    /// <param name="userId">The ID of the user performing the restoration.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    Task RestoreAsync(Guid id, Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Permanently deletes a site setting from the database.
@@ -75,12 +73,6 @@ public interface ISiteSettingService
     /// <summary>
     /// Returns a paged, filtered, and sorted list of site settings.
     /// </summary>
-    /// <param name="searchTerm">Optional search term for filtering.</param>
-    /// <param name="sortColumn">Column to sort by (e.g., "Key", "Category").</param>
-    /// <param name="sortDirection">"asc" or "desc" sorting direction.</param>
-    /// <param name="skip">Number of items to skip for paging.</param>
-    /// <param name="take">Number of items to take per page.</param>
-    /// <param name="cancellationToken">Cancellation token for async operations.</param>
     Task<SiteSettingListResultDto> GetPagedListAsync(
         string? searchTerm,
         string? sortColumn,
@@ -88,5 +80,4 @@ public interface ISiteSettingService
         int skip,
         int take,
         CancellationToken cancellationToken = default);
-
 }

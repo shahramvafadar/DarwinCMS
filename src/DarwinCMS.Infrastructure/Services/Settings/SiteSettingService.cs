@@ -10,6 +10,7 @@ using DarwinCMS.Application.Abstractions.Repositories;
 using DarwinCMS.Application.DTOs.SiteSettings;
 using DarwinCMS.Application.Services.Settings;
 using DarwinCMS.Domain.Entities;
+using DarwinCMS.Infrastructure.Repositories;
 using DarwinCMS.Shared.Exceptions;
 
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,7 @@ namespace DarwinCMS.Infrastructure.Services.Settings;
 
 /// <summary>
 /// Service implementation for managing site-wide configuration settings.
-/// Supports CRUD, soft deletion, restore, hard deletion, and caching.
+/// Includes CRUD, soft deletion, restoration, hard deletion, and caching.
 /// </summary>
 public class SiteSettingService : ISiteSettingService
 {
@@ -27,7 +28,7 @@ public class SiteSettingService : ISiteSettingService
     private readonly IMemoryCache _cache;
 
     /// <summary>
-    /// Initializes the service with repository and caching.
+    /// Initializes a new instance of the <see cref="SiteSettingService"/> class.
     /// </summary>
     public SiteSettingService(ISiteSettingRepository repository, IMemoryCache cache)
     {
@@ -35,7 +36,7 @@ public class SiteSettingService : ISiteSettingService
         _cache = cache;
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task<string> GetValueAsync(string key, string? languageCode = null, CancellationToken cancellationToken = default)
     {
         var setting = await GetCachedSettingAsync(key, languageCode, cancellationToken);
@@ -45,7 +46,7 @@ public class SiteSettingService : ISiteSettingService
         return setting.Value;
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task<T> GetValueAsAsync<T>(string key, string? languageCode = null, CancellationToken cancellationToken = default)
     {
         var value = await GetValueAsync(key, languageCode, cancellationToken);
@@ -60,70 +61,65 @@ public class SiteSettingService : ISiteSettingService
         }
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task<List<SiteSetting>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _repository.Query().Where(s => !s.IsDeleted).ToListAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task<List<SiteSetting>> GetDeletedAsync(CancellationToken cancellationToken = default)
     {
         return await _repository.GetDeletedAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task UpdateValueAsync(
         string oldKey,
         string? oldLanguageCode,
         string newKey,
         string? newLanguageCode,
         string newValue,
-        Guid modifiedBy,
+        Guid modifiedByUserId,
         CancellationToken cancellationToken = default)
     {
-        // Load the setting based on old composite key
         var setting = await _repository.GetByKeyAsync(oldKey, oldLanguageCode, cancellationToken)
             ?? throw new NotFoundException($"Setting not found with Key='{oldKey}' and Language='{oldLanguageCode}'", newKey);
 
-        // Update editable fields, including modifiedBy
-        setting.SetKey(newKey, modifiedBy);
-        setting.SetLanguageCode(newLanguageCode, modifiedBy);
-        setting.SetValue(newValue, modifiedBy);
+        setting.SetKey(newKey, modifiedByUserId);
+        setting.SetLanguageCode(newLanguageCode, modifiedByUserId);
+        setting.SetValue(newValue, modifiedByUserId);
 
-        // Save changes
         _repository.Update(setting);
         await _repository.SaveChangesAsync(cancellationToken);
-
-        // Invalidate cache
+        // Invalidate old and new cache entries
         _cache.Remove(SiteSettingCacheKey(oldKey, oldLanguageCode));
         _cache.Remove(SiteSettingCacheKey(newKey, newLanguageCode));
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task CreateAsync(SiteSetting newSetting, CancellationToken cancellationToken = default)
     {
         await _repository.AddAsync(newSetting, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
 
+        await _repository.SaveChangesAsync(cancellationToken);
+        // Invalidate cache
         _cache.Remove(SiteSettingCacheKey(newSetting.Key, newSetting.LanguageCode));
     }
 
-    /// <inheritdoc />
-    public async Task SoftDeleteAsync(Guid id, Guid? deletedBy = null, CancellationToken cancellationToken = default)
+    /// <inheritdoc/>
+    public async Task SoftDeleteAsync(Guid id, Guid deletedByUserId, CancellationToken cancellationToken = default)
     {
-        await _repository.SoftDeleteAsync(id, deletedBy ?? Guid.Empty, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
+        await _repository.SoftDeleteAsync(id, deletedByUserId, cancellationToken);
     }
 
-    /// <inheritdoc />
-    public async Task RestoreAsync(Guid id, CancellationToken cancellationToken = default)
+    /// <inheritdoc/>
+    public async Task RestoreAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
     {
-        await _repository.RestoreAsync(id, Guid.Empty, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
+        await _repository.RestoreAsync(id, userId, cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task HardDeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         await _repository.HardDeleteAsync(id, cancellationToken);
@@ -140,7 +136,6 @@ public class SiteSettingService : ISiteSettingService
     {
         var query = _repository.Query().Where(s => !s.IsDeleted);
 
-        // Apply search term filter
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             query = query.Where(s =>
@@ -148,7 +143,6 @@ public class SiteSettingService : ISiteSettingService
                 (s.Category != null && s.Category.Contains(searchTerm)));
         }
 
-        // Determine sort expression
         query = (sortColumn?.ToLower(), sortDirection?.ToLower()) switch
         {
             ("category", "desc") => query.OrderByDescending(s => s.Category),
@@ -159,11 +153,9 @@ public class SiteSettingService : ISiteSettingService
             _ => query.OrderBy(s => s.Key)
         };
 
-        // Get total count and items for current page
         var totalCount = await _repository.CountAsync(query, cancellationToken);
         var items = await _repository.ToListAsync(query.Skip(skip).Take(take), cancellationToken);
 
-        // Map to DTOs
         var result = new SiteSettingListResultDto
         {
             TotalCount = totalCount,
