@@ -55,7 +55,7 @@ public interface IRoleService
     /// </summary>
     /// <param name="id">ID of the role to delete.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task HardDeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a single role entity by its ID.

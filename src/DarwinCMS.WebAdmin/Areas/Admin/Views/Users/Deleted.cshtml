@@ -1,0 +1,30 @@
+﻿@model List<DarwinCMS.Application.DTOs.Users.UserListDto>
+
+@{
+    ViewData["Title"] = "Recycle Bin - Users";
+}
+
+<h1 class="mb-4">
+    <i class="fas fa-trash-restore me-2"></i> Recycle Bin - Users
+</h1>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No deleted users found.</div>
+}
+else
+{
+    @await Component.InvokeAsync("RecycleBinList", new
+    {
+        items = Model,
+        controllerName = "Users",
+        firstFieldName = "Username",
+        secondFieldName = "Email",
+        firstPropertyName = "Username",
+        secondPropertyName = "Email"
+    })
+}
+
+<a asp-action="Index" class="btn btn-outline-secondary mt-3">
+    <i class="fas fa-arrow-left me-1"></i> Back to Users
+</a>

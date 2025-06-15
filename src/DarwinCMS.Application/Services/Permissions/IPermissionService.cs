@@ -4,7 +4,7 @@ using DarwinCMS.Domain.Entities;
 namespace DarwinCMS.Application.Services.Permissions;
 
 /// <summary>
-/// Defines contract for all permission-related operations including retrieval, creation, update, and deletion.
+/// Defines contract for all permission-related operations including retrieval, creation, update, deletion, and recycle bin functionality.
 /// </summary>
 public interface IPermissionService
 {
@@ -51,17 +51,32 @@ public interface IPermissionService
     Task UpdateAsync(UpdatePermissionRequest request, Guid modifiedBy, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Marks the specified permission as logically deleted.
+    /// Marks the specified permission as logically deleted (soft delete).
     /// </summary>
     /// <param name="id">The ID of the permission to soft delete.</param>
     /// <param name="userId">The ID of the user performing the soft delete.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     Task SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken = default);
 
-
+    /// <summary>
+    /// Restores a previously soft-deleted permission.
+    /// </summary>
+    /// <param name="id">The ID of the permission to restore.</param>
+    /// <param name="userId">The ID of the user performing the restore.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    Task RestoreAsync(Guid id, Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes a permission by ID if it is not marked as system-critical.
+    /// Permanently deletes a permission from the system (hard delete).
     /// </summary>
-    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    /// <param name="id">The ID of the permission to hard delete.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    Task HardDeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves all permissions that are logically (soft) deleted (recycle bin).
+    /// </summary>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    /// <returns>List of soft-deleted permissions.</returns>
+    Task<List<Permission>> GetDeletedAsync(CancellationToken cancellationToken = default);
 }

@@ -112,7 +112,7 @@ public class RoleService : IRoleService
     /// <summary>
     /// Deletes a role permanently unless it is marked as system.
     /// </summary>
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task HardDeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var role = await _roleRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new BusinessRuleException("Role not found.");
@@ -137,7 +137,7 @@ public class RoleService : IRoleService
         int take,
         CancellationToken cancellationToken = default)
     {
-        var query = _roleRepository.Query().AsNoTracking();
+        var query = _roleRepository.Query().Where(r => !r.IsDeleted).AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(search))
         {

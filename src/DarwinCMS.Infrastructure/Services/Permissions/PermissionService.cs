@@ -66,46 +66,44 @@ public class PermissionService : IPermissionService
     /// <inheritdoc />
     public async Task UpdateAsync(UpdatePermissionRequest request, Guid modifiedBy, CancellationToken cancellationToken = default)
     {
-        var entity = await _permissionRepository.GetByIdAsync(request.Id, cancellationToken);
-        if (entity is null)
-            throw new BusinessRuleException("Permission not found.");
+        var entity = await _permissionRepository.GetByIdAsync(request.Id, cancellationToken)
+            ?? throw new BusinessRuleException("Permission not found.");
 
         if (entity.IsSystem && entity.Name != request.Name)
             throw new BusinessRuleException("System permissions cannot be renamed.");
 
         entity.SetName(request.Name);
         entity.UpdateInfo(request.DisplayName, null, null, modifiedBy);
+        
+        _permissionRepository.Update(entity);
 
         await _permissionRepository.SaveChangesAsync(cancellationToken);
     }
-
 
     /// <inheritdoc />
     public async Task SoftDeleteAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
     {
-        // Load permission or throw if not found
         var permission = await _permissionRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new NotFoundException("Permission not found.", id.ToString());
 
-        // Prevent deletion of system-defined permissions
         if (permission.IsSystem)
             throw new BusinessRuleException("System permissions cannot be deleted.");
 
-        // Perform logical deletion
         await _permissionRepository.SoftDeleteAsync(id, userId, cancellationToken);
-
-        // Commit changes to the database
         await _permissionRepository.SaveChangesAsync(cancellationToken);
     }
 
-
-
+    /// <inheritdoc />
+    public async Task RestoreAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
+    {
+        await _permissionRepository.RestoreAsync(id, userId, cancellationToken);
+    }
 
     /// <inheritdoc />
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task HardDeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var permission = await _permissionRepository.GetByIdAsync(id, cancellationToken);
-        if (permission is null)
+        if (permission == null)
             return;
 
         if (permission.IsSystem)
@@ -113,6 +111,12 @@ public class PermissionService : IPermissionService
 
         _permissionRepository.Delete(permission);
         await _permissionRepository.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<List<Permission>> GetDeletedAsync(CancellationToken cancellationToken = default)
+    {
+        return await _permissionRepository.GetDeletedAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -125,6 +129,7 @@ public class PermissionService : IPermissionService
         CancellationToken cancellationToken = default)
     {
         var query = _permissionRepository.Query();
+        query = query.Where(p => !p.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(search))
         {

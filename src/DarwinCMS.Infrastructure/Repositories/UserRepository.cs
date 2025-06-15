@@ -22,14 +22,14 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
     {
         var normalized = username.Trim().ToLowerInvariant();
-        return await _set.FirstOrDefaultAsync(u => u.Username.ToLower() == normalized, cancellationToken);
+        return await _set.FirstOrDefaultAsync(u => u.Username.ToLower() == normalized && !u.IsDeleted, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         var normalized = email.Trim().ToLowerInvariant();
-        return await _set.FirstOrDefaultAsync(u => u.Email.Value.ToLower() == normalized, cancellationToken);
+        return await _set.FirstOrDefaultAsync(u => u.Email.Value.ToLower() == normalized && !u.IsDeleted, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -39,8 +39,8 @@ public class UserRepository : BaseRepository<User>, IUserRepository
         var normalizedEmail = email.Trim().ToLowerInvariant();
 
         return await _set.FirstOrDefaultAsync(u =>
-            u.Username.ToLower() == normalizedUsername ||
-            u.Email.Value.ToLower() == normalizedEmail,
+            (u.Username.ToLower() == normalizedUsername || u.Email.Value.ToLower() == normalizedEmail)
+            && !u.IsDeleted,
             cancellationToken);
     }
 
@@ -48,7 +48,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     public async Task<List<User>> GetAllActiveAsync(CancellationToken cancellationToken = default)
     {
         return await _set
-            .Where(u => u.IsActive)
+            .Where(u => u.IsActive && !u.IsDeleted)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
@@ -64,7 +64,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     public async Task<List<User>> GetSystemUsersAsync(CancellationToken cancellationToken = default)
     {
         return await _set
-            .Where(u => u.IsSystem)
+            .Where(u => u.IsSystem && !u.IsDeleted)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }

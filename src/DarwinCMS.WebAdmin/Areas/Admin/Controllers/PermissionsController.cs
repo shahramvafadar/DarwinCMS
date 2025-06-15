@@ -5,7 +5,6 @@ using DarwinCMS.Application.Services.AccessControl;
 using DarwinCMS.Application.Services.Permissions;
 using DarwinCMS.Shared.Exceptions;
 using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Permissions;
-using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared;
 using DarwinCMS.WebAdmin.Infrastructure.Helpers;
 using DarwinCMS.WebAdmin.Infrastructure.Security;
 
@@ -13,10 +12,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DarwinCMS.WebAdmin.Areas.Admin.Controllers;
 
-/// 
+/// <summary>
 /// Handles admin-level operations related to permission management,
-/// including listing, creation, editing, and deletion.
-/// 
+/// including listing, creation, editing, soft deletion, restoration, and hard deletion.
+/// </summary>
 [Area("Admin")]
 [HasPermission("manage_permissions")]
 public class PermissionsController : Controller
@@ -60,14 +59,7 @@ public class PermissionsController : Controller
 
         var viewModel = new PermissionIndexViewModel
         {
-            Permissions = result.Permissions.Select(p => new PermissionListViewModel
-            {
-                Id = p.Id,
-                Name = p.Name,
-                DisplayName = p.DisplayName,
-                IsSystem = p.IsSystem
-            }).ToList(),
-
+            Permissions = _mapper.Map<List<PermissionListViewModel>>(result.Permissions),
             TotalPages = (int)Math.Ceiling(result.TotalCount / (double)PageSize),
             CurrentPage = page,
             SearchTerm = searchTerm,
@@ -143,7 +135,7 @@ public class PermissionsController : Controller
     }
 
     /// <summary>
-    /// Loads the confirmation page before deleting a permission.
+    /// Loads the confirmation page before soft deleting a permission.
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> Delete(Guid id)
@@ -152,36 +144,57 @@ public class PermissionsController : Controller
         if (entity == null)
             return NotFound();
 
-        var model = new PermissionListViewModel
-        {
-            Id = entity.Id,
-            Name = entity.Name,
-            DisplayName = entity.DisplayName ?? string.Empty,
-            IsSystem = entity.IsSystem
-        };
-
+        var model = _mapper.Map<PermissionListViewModel>(entity);
         return View(model);
     }
 
     /// <summary>
-    /// Permanently deletes a permission after confirmation.
+    /// Performs a soft delete (moves the permission to recycle bin).
     /// </summary>
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(Guid id)
+    public async Task<IActionResult> SoftDeleteConfirmed(Guid id)
     {
-        try
-        {
-            await _permissionService.DeleteAsync(id);
-            this.AddSuccess("Permission deleted successfully.");
-        }
-        catch (BusinessRuleException ex)
-        {
-            this.AddError(ex.Message);
-        }
-
+        await _permissionService.SoftDeleteAsync(id, _currentUser.UserId ?? Guid.Empty);
+        this.AddSuccess("Permission moved to recycle bin.");
         return RedirectToAction(nameof(Index));
     }
 
-}
+    /// <summary>
+    /// Lists all permissions that are soft-deleted (recycle bin).
+    /// </summary>
+    [HttpGet]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> Deleted()
+    {
+        var deletedPermissions = await _permissionService.GetDeletedAsync();
+        var viewModel = _mapper.Map<List<PermissionListViewModel>>(deletedPermissions);
+        return View(viewModel);
+    }
 
+    /// <summary>
+    /// Restores a previously soft-deleted permission.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> Restore(Guid id)
+    {
+        await _permissionService.RestoreAsync(id, _currentUser.UserId ?? Guid.Empty);
+        this.AddSuccess("Permission restored successfully.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// Permanently deletes a permission from the system (hard delete).
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> HardDelete(Guid id)
+    {
+        await _permissionService.HardDeleteAsync(id);
+        this.AddSuccess("Permission permanently deleted.");
+        return RedirectToAction(nameof(Deleted));
+    }
+}

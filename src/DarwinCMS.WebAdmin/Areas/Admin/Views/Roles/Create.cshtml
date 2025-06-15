@@ -1,4 +1,5 @@
 ﻿@model DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Roles.CreateRoleViewModel
+
 @{
     ViewData["Title"] = "Create Role";
 }
@@ -10,15 +11,19 @@
                 <i class="fas fa-user-shield me-2"></i> Create New Role
             </h3>
 
-            <form asp-action="Create" method="post">
+            <form asp-action="Create" method="post" novalidate>
                 <div class="mb-3">
-                    <label asp-for="Name" class="form-label">Name</label>
+                    <label asp-for="Name" class="form-label">
+                        Name <span class="text-danger">*</span>
+                    </label>
                     <input asp-for="Name" class="form-control" />
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="DisplayName" class="form-label">Display Name</label>
+                    <label asp-for="DisplayName" class="form-label">
+                        Display Name <span class="text-danger">*</span>
+                    </label>
                     <input asp-for="DisplayName" class="form-control" />
                     <span asp-validation-for="DisplayName" class="text-danger"></span>
                 </div>
@@ -31,15 +36,15 @@
 
                 <div class="form-check mb-4">
                     <input asp-for="IsActive" class="form-check-input" />
-                    <label asp-for="IsActive" class="form-check-label">Is Active</label>
+                    <label asp-for="IsActive" class="form-check-label"></label>
                 </div>
 
                 <div class="d-flex justify-content-between">
                     <a asp-action="Index" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i> Back to List
+                        <i class="fas fa-arrow-left me-1"></i> Cancel
                     </a>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i> Create Role
+                        <i class="fas fa-check-circle me-1"></i> Create Role
                     </button>
                 </div>
             </form>
@@ -48,5 +53,6 @@
 </div>
 
 @section Scripts {
+    <!-- Client-side validation scripts -->
     <partial name="_ValidationScriptsPartial" />
 }

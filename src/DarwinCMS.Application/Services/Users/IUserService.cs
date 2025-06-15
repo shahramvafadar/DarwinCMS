@@ -4,7 +4,7 @@ using DarwinCMS.Domain.Entities;
 namespace DarwinCMS.Application.Services.Users;
 
 /// <summary>
-/// Exposes user-related business operations.
+/// Exposes user-related business operations, including CRUD, soft deletion, restoration, and listing deleted items.
 /// </summary>
 public interface IUserService
 {
@@ -24,12 +24,32 @@ public interface IUserService
     Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Soft-deactivates a user.
+    /// Soft-deletes (disables) a user by marking as logically deleted.
+    /// </summary>
+    Task SoftDeleteAsync(Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Restores a previously soft-deleted user.
+    /// </summary>
+    Task RestoreAsync(Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Permanently deletes a user from the system (hard delete).
+    /// </summary>
+    Task HardDeleteAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Loads all users marked as soft-deleted (recycle bin view).
+    /// </summary>
+    Task<List<User>> GetDeletedAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Soft-deactivates (disables) a user.
     /// </summary>
     Task DisableUserAsync(Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Reactivates a disabled user.
+    /// Reactivates a previously disabled user.
     /// </summary>
     Task EnableUserAsync(Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default);
 
@@ -54,11 +74,6 @@ public interface IUserService
     /// Updates the profile and role of a user.
     /// </summary>
     Task UpdateAsync(UpdateUserRequest request, Guid performedByUserId, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Deletes the user and any associated mappings.
-    /// </summary>
-    Task DeleteUserAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves all role IDs assigned to a user.

@@ -5,7 +5,6 @@ using DarwinCMS.Application.Services.AccessControl;
 using DarwinCMS.Application.Services.Roles;
 using DarwinCMS.Shared.Exceptions;
 using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Roles;
-using DarwinCMS.WebAdmin.Areas.Admin.ViewModels.Shared;
 using DarwinCMS.WebAdmin.Infrastructure.Helpers;
 using DarwinCMS.WebAdmin.Infrastructure.Security;
 
@@ -13,9 +12,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DarwinCMS.WebAdmin.Areas.Admin.Controllers;
 
-/// 
-/// Handles administrative role management including listing, creation, editing, and deletion of roles.
-/// 
+/// <summary>
+/// Handles administrative role management including listing, creation, editing, soft deletion, restoration, and permanent deletion of roles.
+/// </summary>
 [Area("Admin")]
 [HasPermission("manage_roles")]
 public class RolesController : Controller
@@ -35,7 +34,7 @@ public class RolesController : Controller
     }
 
     /// <summary>
-    /// Displays the paginated list of roles with optional filtering and sorting.
+    /// Displays the paginated list of active roles with optional filtering and sorting.
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> Index(string? searchTerm, string? sortColumn, string? sortDirection, int page = 1)
@@ -54,6 +53,19 @@ public class RolesController : Controller
             SortColumn = sortColumn ?? "Name",
             SortDirection = sortDirection ?? "asc"
         };
+
+        return View(viewModel);
+    }
+
+    /// <summary>
+    /// Displays the list of soft-deleted roles (recycle bin).
+    /// </summary>
+    [HttpGet]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> Deleted()
+    {
+        var deletedRoles = await _roleService.GetDeletedAsync();
+        var viewModel = _mapper.Map<List<RoleListItemViewModel>>(deletedRoles);
 
         return View(viewModel);
     }
@@ -112,6 +124,7 @@ public class RolesController : Controller
         {
             var request = _mapper.Map<UpdateRoleRequest>(model);
             await _roleService.UpdateAsync(request, _currentUser.UserId ?? Guid.Empty);
+
             this.AddSuccess("Role updated successfully.");
             return RedirectToAction(nameof(Index));
         }
@@ -123,10 +136,9 @@ public class RolesController : Controller
     }
 
     /// <summary>
-    /// Displays the delete confirmation page for a role.
+    /// Displays the confirmation page for soft-deleting a role.
     /// </summary>
     [HttpGet]
-    [Route("Admin/Roles/Delete/{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var dto = await _roleService.GetByIdAsync(id);
@@ -138,24 +150,45 @@ public class RolesController : Controller
     }
 
     /// <summary>
-    /// Confirms deletion of the role.
+    /// Performs a soft delete (logical deletion) of the role.
     /// </summary>
-    [HttpPost]
+    [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(Guid id)
+    public async Task<IActionResult> SoftDeleteConfirmed(Guid id)
     {
-        try
-        {
-            await _roleService.DeleteAsync(id);
-            this.AddSuccess("Role deleted successfully.");
-        }
-        catch (BusinessRuleException ex)
-        {
-            this.AddError(ex.Message);
-        }
+        var userId = _currentUser.UserId ?? throw new InvalidOperationException("User not authenticated.");
+        await _roleService.SoftDeleteAsync(id, userId);
 
+        this.AddSuccess("Role moved to recycle bin.");
         return RedirectToAction(nameof(Index));
     }
 
-}
+    /// <summary>
+    /// Restores a previously soft-deleted role back to active status.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> Restore(Guid id)
+    {
+        var userId = _currentUser.UserId ?? throw new InvalidOperationException("User not authenticated.");
+        await _roleService.RestoreAsync(id, userId);
 
+        this.AddSuccess("Role restored successfully.");
+        return RedirectToAction(nameof(Deleted));
+    }
+
+    /// <summary>
+    /// Permanently deletes a role from the system.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> HardDelete(Guid id)
+    {
+        await _roleService.HardDeleteAsync(id);
+
+        this.AddSuccess("Role permanently deleted.");
+        return RedirectToAction(nameof(Deleted));
+    }
+}

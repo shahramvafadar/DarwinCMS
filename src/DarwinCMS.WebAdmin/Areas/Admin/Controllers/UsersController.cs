@@ -15,10 +15,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DarwinCMS.WebAdmin.Areas.Admin.Controllers;
 
-/// 
+/// <summary>
 /// Controller responsible for managing user accounts in the admin area,
-/// including listing, creating, editing, and deleting users.
-/// 
+/// including listing, creating, editing, soft-deleting, restoring, and permanent deletion.
+/// </summary>
 [Area("Admin")]
 [HasPermission("manage_users")]
 public class UsersController : Controller
@@ -44,7 +44,7 @@ public class UsersController : Controller
     }
 
     /// <summary>
-    /// Displays the paginated list of users with optional filtering and sorting.
+    /// Displays the paginated list of active (non-deleted) users.
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> Index(
@@ -64,6 +64,9 @@ public class UsersController : Controller
             sortDirection,
             skip,
             pageSize);
+
+        // Filter out soft-deleted users (if not already handled in service)
+        result.Users = result.Users.Where(u => !u.IsDeleted).ToList();
 
         var allRoles = await _roleService.GetAllRolesAsync();
         var viewModel = new UserListViewModel
@@ -169,10 +172,9 @@ public class UsersController : Controller
     }
 
     /// <summary>
-    /// Loads the delete confirmation view.
+    /// Displays the confirmation view for soft-deleting a user.
     /// </summary>
     [HttpGet]
-    [Route("Admin/Users/Delete/{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var user = await _userService.GetByIdAsync(id);
@@ -187,16 +189,16 @@ public class UsersController : Controller
     }
 
     /// <summary>
-    /// Confirms and deletes a user by ID.
+    /// Soft-deletes a user (moves to recycle bin).
     /// </summary>
-    [HttpPost]
+    [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(Guid id)
+    public async Task<IActionResult> SoftDeleteConfirmed(Guid id)
     {
         try
         {
-            await _userService.DeleteUserAsync(id);
-            this.AddSuccess("User deleted successfully.");
+            await _userService.SoftDeleteAsync(id, _currentUser.UserId ?? Guid.Empty);
+            this.AddSuccess("User moved to recycle bin.");
         }
         catch (BusinessRuleException ex)
         {
@@ -204,6 +206,45 @@ public class UsersController : Controller
         }
 
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// Displays the recycle bin view with soft-deleted users.
+    /// </summary>
+    [HttpGet]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> Deleted()
+    {
+        var deletedUsers = await _userService.GetDeletedAsync();
+        var viewModel = _mapper.Map<List<UserListDto>>(deletedUsers);
+
+        return View(viewModel);
+    }
+
+    /// <summary>
+    /// Restores a soft-deleted user from the recycle bin.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> Restore(Guid id)
+    {
+        await _userService.RestoreAsync(id, _currentUser.UserId ?? Guid.Empty);
+        this.AddSuccess("User restored successfully.");
+        return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// Permanently deletes a user from the system (hard delete).
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [HasPermission("recycle_bin_access")]
+    public async Task<IActionResult> HardDelete(Guid id)
+    {
+        await _userService.HardDeleteAsync(id);
+        this.AddSuccess("User permanently deleted.");
+        return RedirectToAction(nameof(Deleted));
     }
 
     /// <summary>
@@ -218,6 +259,4 @@ public class UsersController : Controller
             Text = r.Name
         }).ToList();
     }
-
 }
-

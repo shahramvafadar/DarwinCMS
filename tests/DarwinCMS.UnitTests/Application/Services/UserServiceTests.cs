@@ -13,6 +13,7 @@ using DarwinCMS.Application.Services.Users;
 using DarwinCMS.Domain.Entities;
 using DarwinCMS.Domain.ValueObjects;
 using DarwinCMS.Infrastructure.Services.Users;
+using DarwinCMS.Shared.Exceptions;
 using DarwinCMS.Shared.Security;
 
 using FluentAssertions;
@@ -118,9 +119,10 @@ public class UserServiceTests
 
         var act = () => _userService.CreateAsync(request, Guid.NewGuid());
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
+        await act.Should().ThrowAsync<BusinessRuleException>()
             .WithMessage("Username or Email is already taken.");
     }
+
 
     /// <summary>
     /// Disables an active user and confirms status change.
@@ -191,27 +193,36 @@ public class UserServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var role1 = Guid.NewGuid();
-        var role2 = Guid.NewGuid();
         var oldRoleId = Guid.NewGuid();
+        var newRole1 = Guid.NewGuid();
+        var newRole2 = Guid.NewGuid();
 
         var user = new User("Test", "User", "Other", new DateTime(2000, 1, 1), "testuser", new Email("test@example.com"), "hash", Guid.NewGuid());
-        var oldUserRole = new UserRole(userId, oldRoleId);
+        typeof(User).GetProperty("Id")!.SetValue(user, userId);
 
-        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var oldUserRole = new UserRole(userId, oldRoleId);
+        typeof(UserRole).GetProperty("Id")!.SetValue(oldUserRole, Guid.NewGuid());
 
         var userRoles = new List<UserRole> { oldUserRole };
+
+        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
         _userRoleRepositoryMock.Setup(r => r.GetByUserIdAsync(userId, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(userRoles);
 
-        // Use a backing list to track the actual UserRole objects passed to Delete
-        var deletedRoles = new List<(Guid UserId, Guid RoleId)>();
+        var deletedRoles = new List<UserRole>();
+
         _userRoleRepositoryMock.Setup(r => r.Delete(It.IsAny<UserRole>()))
-            .Callback<UserRole>(ur => deletedRoles.Add((ur.UserId, ur.RoleId)));
+            .Callback<UserRole>(ur => deletedRoles.Add(ur));
 
         _userRoleRepositoryMock.Setup(r => r.AddAsync(It.IsAny<UserRole>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
+        _userRoleRepositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _userRepositoryMock.Setup(r => r.Update(It.IsAny<User>()));
         _userRepositoryMock.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
@@ -229,30 +240,30 @@ public class UserServiceTests
             MobilePhone = null,
             IsEmailConfirmed = true,
             IsMobileConfirmed = true,
-            RoleIds = new List<Guid> { role1, role2 }
+            RoleIds = new List<Guid> { newRole1, newRole2 }
         };
 
         // Act
         await _userService.UpdateAsync(updateRequest, Guid.NewGuid());
 
         // Assert
-        deletedRoles.Should().ContainSingle(
-            ur => ur.UserId == userId && ur.RoleId == oldRoleId,
+        deletedRoles.Should().ContainSingle(ur =>
+            ur.UserId == userId && ur.RoleId == oldRoleId,
             "the service should delete old roles before assigning new ones");
 
         _userRepositoryMock.Verify(r => r.Update(It.IsAny<User>()), Times.Once);
         _userRepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         _userRoleRepositoryMock.Verify(r => r.AddAsync(It.IsAny<UserRole>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        _userRoleRepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
-
-
     /// <summary>
-    /// Removes a user and all related user-role records.
+    /// Should hard delete user and their roles.
     /// </summary>
-    [Fact(DisplayName = "Should delete user and their roles")]
-    public async Task DeleteUserAsync_ShouldRemoveUserAndRoles()
+    [Fact(DisplayName = "Should hard delete user and their roles")]
+    public async Task HardDeleteAsync_ShouldRemoveUserAndRoles()
     {
+        // Arrange
         var userId = Guid.NewGuid();
         var user = new User("Sophie", "Martin", "Female", new DateTime(1991, 5, 20), "sophiem", new Email("sophie@test.com"), "hash", Guid.NewGuid());
 
@@ -261,10 +272,15 @@ public class UserServiceTests
         _userRoleRepositoryMock.Setup(r => r.GetByUserIdAsync(userId, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<UserRole> { new(userId, Guid.NewGuid()) });
 
-        await _userService.DeleteUserAsync(userId);
+        // Act
+        await _userService.HardDeleteAsync(userId);
 
+        // Assert
         _userRoleRepositoryMock.Verify(r => r.Delete(It.IsAny<UserRole>()), Times.AtLeastOnce);
-        _userRepositoryMock.Verify(r => r.Delete(user), Times.Once);
-        _userRepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _userRepositoryMock.Verify(r => r.HardDeleteAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        // ❌ این Verify رو دیگه حذف می‌کنیم چون SaveChangesAsync در Repository انجام میشه
+        // _userRepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
+
+
 }

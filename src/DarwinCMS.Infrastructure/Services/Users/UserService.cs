@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DarwinCMS.Infrastructure.Services.Users;
 
 /// <summary>
-/// Provides user-related business logic including creation, retrieval, update, deletion, role assignments, and listings.
+/// Provides user-related business logic including creation, retrieval, update, deletion, restoration, role assignments, and listings.
 /// </summary>
 public class UserService : IUserService
 {
@@ -68,6 +68,8 @@ public class UserService : IUserService
 
         if (request.IsEmailConfirmed) user.ConfirmEmail();
         if (request.IsMobileConfirmed) user.ConfirmMobile();
+
+        user.MarkAsCreated(performedByUserId);
 
         await _userRepository.AddAsync(user, cancellationToken);
 
@@ -131,7 +133,7 @@ public class UserService : IUserService
     /// <inheritdoc />
     public async Task<UserListResultDto> GetUserListAsync(string? search, Guid? roleId, string? sortColumn, string? sortDirection, int skip, int take, CancellationToken cancellationToken = default)
     {
-        var query = _userRepository.Query().AsNoTracking();
+        var query = _userRepository.Query().AsNoTracking().Where(u => !u.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -215,8 +217,11 @@ public class UserService : IUserService
         var userRoles = await _userRoleRepository.GetByUserIdAsync(user.Id, null, cancellationToken)
                         ?? new List<UserRole>();
 
-        foreach (var ur in userRoles.Where(r => r != null))
+        foreach (var ur in userRoles)
             _userRoleRepository.Delete(ur);
+
+        // Important: Persist deletion of old roles
+        await _userRoleRepository.SaveChangesAsync(cancellationToken);
 
         foreach (var roleId in request.RoleIds)
             await _userRoleRepository.AddAsync(new UserRole(user.Id, roleId), cancellationToken);
@@ -225,20 +230,40 @@ public class UserService : IUserService
     }
 
     /// <inheritdoc />
-    public async Task DeleteUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task SoftDeleteAsync(Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default)
+    {
+        await _userRepository.SoftDeleteAsync(userId, performedByUserId, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task RestoreAsync(Guid userId, Guid performedByUserId, CancellationToken cancellationToken = default)
+    {
+        await _userRepository.RestoreAsync(userId, performedByUserId, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task HardDeleteAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
             ?? throw new BusinessRuleException("User not found.");
 
         if (user.IsSystem)
-            throw new BusinessRuleException("System users cannot be deleted.");
+            throw new BusinessRuleException("System users cannot be permanently deleted.");
 
         var userRoles = await _userRoleRepository.GetByUserIdAsync(userId, null, cancellationToken);
         foreach (var ur in userRoles)
             _userRoleRepository.Delete(ur);
 
-        _userRepository.Delete(user);
-        await _userRepository.SaveChangesAsync(cancellationToken);
+        // Important: Persist deletion of old roles
+        await _userRoleRepository.SaveChangesAsync(cancellationToken);
+
+        await _userRepository.HardDeleteAsync(userId, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<List<User>> GetDeletedAsync(CancellationToken cancellationToken = default)
+    {
+        return await _userRepository.GetDeletedAsync(cancellationToken);
     }
 
     /// <inheritdoc />

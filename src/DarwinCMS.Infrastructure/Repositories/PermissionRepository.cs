@@ -23,6 +23,7 @@ public class PermissionRepository : BaseRepository<Permission>, IPermissionRepos
     public async Task<List<Permission>> GetAllAsync(string? module = null, CancellationToken cancellationToken = default)
     {
         var query = _set.AsQueryable();
+        query = query.Where(p => !p.IsDeleted);
 
         // Filter by module if provided
         if (!string.IsNullOrWhiteSpace(module))
@@ -49,13 +50,5 @@ public class PermissionRepository : BaseRepository<Permission>, IPermissionRepos
     public async Task<List<Permission>> ToListAsync(IQueryable<Permission> query, CancellationToken cancellationToken = default)
     {
         return await query.AsNoTracking().ToListAsync(cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public override async Task<Permission?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        return await _set
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, cancellationToken);
-    }
+    }    
 }

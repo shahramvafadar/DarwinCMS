@@ -29,6 +29,11 @@ public class RoleListViewModel
     public int TotalPages { get; set; }
 
     /// <summary>
+    /// Number of items per page.
+    /// </summary>
+    public int PageSize { get; set; } = 20;
+
+    /// <summary>
     /// Column currently used for sorting.
     /// </summary>
     public string? SortColumn { get; set; }

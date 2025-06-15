@@ -5,6 +5,8 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using AutoMapper;
+
 using DarwinCMS.Application.Abstractions.Repositories;
 using DarwinCMS.Application.Services.Permissions;
 using DarwinCMS.Domain.Entities;
@@ -24,6 +26,7 @@ namespace DarwinCMS.UnitTests.Application.Services;
 public class PermissionServiceTests
 {
     private readonly Mock<IPermissionRepository> _permissionRepositoryMock;
+    private readonly Mock<IMapper> _mapperMock;
     private readonly IPermissionService _permissionService;
 
     /// <summary>
@@ -32,7 +35,8 @@ public class PermissionServiceTests
     public PermissionServiceTests()
     {
         _permissionRepositoryMock = new Mock<IPermissionRepository>();
-        _permissionService = new PermissionService(_permissionRepositoryMock.Object);
+        _mapperMock = new Mock<IMapper>();
+        _permissionService = new PermissionService(_permissionRepositoryMock.Object, _mapperMock.Object);
     }
 
     /// <summary>
@@ -104,14 +108,13 @@ public class PermissionServiceTests
     }
 
     /// <summary>
-    /// Should delete a permission if found by ID.
+    /// Should hard delete a permission if found by ID.
     /// </summary>
-    [Fact(DisplayName = "Should delete permission if found")]
-    public async Task DeleteAsync_ShouldCallDelete_WhenPermissionFound()
+    [Fact(DisplayName = "Should hard delete permission if found")]
+    public async Task HardDeleteAsync_ShouldDelete_WhenPermissionFound()
     {
         // Arrange
         var permission = new Permission("TempDelete", Guid.NewGuid());
-
         typeof(Permission).GetProperty("Id", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!
             .SetValue(permission, Guid.NewGuid());
 
@@ -120,7 +123,7 @@ public class PermissionServiceTests
             .ReturnsAsync(permission);
 
         // Act
-        await _permissionService.DeleteAsync(permission.Id);
+        await _permissionService.HardDeleteAsync(permission.Id);
 
         // Assert
         _permissionRepositoryMock.Verify(x => x.Delete(permission), Times.Once);
@@ -128,10 +131,10 @@ public class PermissionServiceTests
     }
 
     /// <summary>
-    /// Should not attempt deletion if permission does not exist.
+    /// Should not attempt hard deletion if permission does not exist.
     /// </summary>
-    [Fact(DisplayName = "Should not call delete if permission not found")]
-    public async Task DeleteAsync_ShouldDoNothing_WhenNotFound()
+    [Fact(DisplayName = "Should not call hard delete if permission not found")]
+    public async Task HardDeleteAsync_ShouldDoNothing_WhenNotFound()
     {
         // Arrange
         var id = Guid.NewGuid();
@@ -141,7 +144,7 @@ public class PermissionServiceTests
             .ReturnsAsync((Permission?)null);
 
         // Act
-        await _permissionService.DeleteAsync(id);
+        await _permissionService.HardDeleteAsync(id);
 
         // Assert
         _permissionRepositoryMock.Verify(x => x.Delete(It.IsAny<Permission>()), Times.Never);

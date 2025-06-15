@@ -68,9 +68,13 @@ public class AdminMapperProfile : Profile
 
         // ========== PERMISSION MAPPINGS ==========
         CreateMap<Permission, PermissionListDto>();
+        CreateMap<PermissionListDto, PermissionListViewModel>();
         CreateMap<CreatePermissionViewModel, CreatePermissionRequest>();
         CreateMap<EditPermissionViewModel, UpdatePermissionRequest>();
         CreateMap<Permission, EditPermissionViewModel>();
+        CreateMap<Permission, PermissionListViewModel>();
+
+
 
         // ========== PAGE MAPPINGS ==========
         CreateMap<Page, PageListItemDto>();

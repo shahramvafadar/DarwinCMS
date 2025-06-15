@@ -42,11 +42,11 @@ public class MenuService : IMenuService
         var menus = await _menuRepository.Query()
             .Where(m => !m.IsDeleted)
             .AsNoTracking()
-            .ProjectTo<MenuListItemDto>(_mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken); // returns List<Menu>
 
-        return menus;
+        return menus.Select(m => _mapper.Map<MenuListItemDto>(m)).ToList(); // projection outside EF
     }
+
 
     /// <inheritdoc />
     public async Task<MenuDetailDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

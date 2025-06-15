@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +10,7 @@ using DarwinCMS.Application.Abstractions.Repositories;
 using DarwinCMS.Application.Services.Roles;
 using DarwinCMS.Domain.Entities;
 using DarwinCMS.Infrastructure.Services.Roles;
+using DarwinCMS.Shared.Exceptions;
 
 using FluentAssertions;
 
@@ -21,13 +21,13 @@ using Xunit;
 namespace DarwinCMS.UnitTests.Application.Services;
 
 /// <summary>
-/// Unit tests for RoleService, focused on retrieval and deletion operations.
+/// Unit tests for RoleService, focused on retrieval and hard deletion operations.
 /// </summary>
 public class RoleServiceTests
 {
     private readonly Mock<IRoleRepository> _roleRepositoryMock;
     private readonly Mock<IUserRoleRepository> _userRoleRepositoryMock;
-    private readonly IMapper _mapper;
+    private readonly Mock<IMapper> _mapperMock;
     private readonly IRoleService _roleService;
 
     /// <summary>
@@ -37,14 +37,12 @@ public class RoleServiceTests
     {
         _roleRepositoryMock = new Mock<IRoleRepository>();
         _userRoleRepositoryMock = new Mock<IUserRoleRepository>();
-
-        var config = new MapperConfiguration(cfg => { /* Add mapping profiles if needed */ });
-        _mapper = config.CreateMapper();
+        _mapperMock = new Mock<IMapper>();
 
         _roleService = new RoleService(
             _roleRepositoryMock.Object,
             _userRoleRepositoryMock.Object,
-            _mapper);
+            _mapperMock.Object);
     }
 
     /// <summary>
@@ -84,10 +82,10 @@ public class RoleServiceTests
     }
 
     /// <summary>
-    /// Should delete role if found.
+    /// Should hard delete role if found.
     /// </summary>
-    [Fact(DisplayName = "Should delete role if exists")]
-    public async Task DeleteAsync_ShouldCallRepository_WhenRoleFound()
+    [Fact(DisplayName = "Should hard delete role if found")]
+    public async Task HardDeleteAsync_ShouldDelete_WhenRoleFound()
     {
         // Arrange
         var role = new Role("Temp", Guid.NewGuid());
@@ -97,7 +95,7 @@ public class RoleServiceTests
         _roleRepositoryMock.Setup(x => x.GetByIdAsync(role.Id, It.IsAny<CancellationToken>())).ReturnsAsync(role);
 
         // Act
-        await _roleService.DeleteAsync(role.Id);
+        await _roleService.HardDeleteAsync(role.Id);
 
         // Assert
         _roleRepositoryMock.Verify(x => x.Delete(role), Times.Once);
@@ -105,10 +103,10 @@ public class RoleServiceTests
     }
 
     /// <summary>
-    /// Should throw if role is not found.
+    /// Should throw BusinessRuleException when role not found for hard delete.
     /// </summary>
-    [Fact(DisplayName = "Should throw if role is not found")]
-    public async Task DeleteAsync_ShouldThrow_WhenRoleNotFound()
+    [Fact(DisplayName = "Should throw exception if role not found for hard delete")]
+    public async Task HardDeleteAsync_ShouldThrow_WhenRoleNotFound()
     {
         // Arrange
         var id = Guid.NewGuid();
@@ -116,10 +114,10 @@ public class RoleServiceTests
             .ReturnsAsync((Role?)null);
 
         // Act
-        var act = async () => await _roleService.DeleteAsync(id);
+        var act = async () => await _roleService.HardDeleteAsync(id);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
+        await act.Should().ThrowAsync<BusinessRuleException>()
             .WithMessage("Role not found.");
     }
 
