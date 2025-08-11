@@ -8,9 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="bootstrap" Version="5.3.6" />
+    <PackageReference Include="bootstrap" Version="5.3.7" />
     <PackageReference Include="jQuery" Version="3.7.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
     <PackageReference Include="Microsoft.jQuery.Unobtrusive.Ajax" Version="3.2.6" />
   </ItemGroup>
 
@@ -22,7 +22,6 @@
     <Folder Include="Areas\Member\Views\Shared\" />
     <Folder Include="Resources\" />
     <Folder Include="Pages\" />
-    <Folder Include="Views\Home\" />
     <Folder Include="wwwroot\images\" />
     <Folder Include="wwwroot\lib\" />
     <Folder Include="wwwroot\js\" />
