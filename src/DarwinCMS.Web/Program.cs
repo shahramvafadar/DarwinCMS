@@ -1,27 +1,24 @@
-﻿using DarwinCMS.Infrastructure;
+﻿using System.Globalization;
+
+using DarwinCMS.Web.Infrastructure;
 using DarwinCMS.Web.Infrastructure.Modules;
 
 using Microsoft.AspNetCore.Localization;
 
-using System.Globalization;
-
 var builder = WebApplication.CreateBuilder(args);
 
-// === MVC & Razor Pages Setup ===
-// Enables traditional controllers with views and Razor Pages support
+// === MVC & Razor Pages ===
 var mvcBuilder = builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
-// === Core CMS Services ===
-// Registers core business services (e.g., content, menu, SEO, etc.)
-builder.Services.AddDarwinCmsServices(builder.Configuration);
+// === Web DI (EF + repos + domain services + public query services) ===
+// Uses ConnectionStrings:DefaultConnection and does NOT run seed here
+builder.Services.AddWebServices(builder.Configuration);
 
-// === Module Loader ===
-// Automatically loads controllers, views, and static files from modular packages
+// === Modules (pluggable) ===
 ModuleLoader.RegisterModules(builder.Services, mvcBuilder, builder.Environment.WebRootPath);
 
-// === Localization Support ===
-// Enables multilingual UI (e.g., English, German, Persian)
+// === Localization ===
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
@@ -32,45 +29,43 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
         new CultureInfo("fa")
     };
 
-    options.DefaultRequestCulture = new RequestCulture("en");
+    options.DefaultRequestCulture = new RequestCulture("de");
     options.SupportedCultures = supportedCultures;
     options.SupportedUICultures = supportedCultures;
 });
 
-// === Session Configuration ===
-// Used for language selection, anonymous preferences, etc.
+// === Session ===
 builder.Services.AddSession(options =>
 {
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.SameSite = SameSiteMode.Lax; // Safe for internal usage (not cross-origin)
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
-// Allows services and views to access the current request
+// HttpContext access for controllers/views/components
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// === Middleware Pipeline ===
-
-app.UseRequestLocalization();      // Activates multilingual support
-app.UseStaticFiles();              // Serves files from wwwroot and modules
+// === Pipeline ===
+app.UseRequestLocalization();
+app.UseStaticFiles();
 app.UseRouting();
-app.UseSession();                  // Enables session-based features
+app.UseSession();
 
-// === Routing Configuration ===
+// Custom status code pages → /error/{code} (ErrorController.Status)
+app.UseStatusCodePagesWithReExecute("/error/{0}");
 
-// Area-based routing (for future modules with Areas)
+// === Routes ===
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 
-// Default routing for the public site
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapRazorPages(); // Enables modular UI pages (optional)
+app.MapRazorPages();
 
 app.Run();

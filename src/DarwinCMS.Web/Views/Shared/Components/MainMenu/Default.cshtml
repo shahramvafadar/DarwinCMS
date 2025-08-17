@@ -1,0 +1,54 @@
+﻿@using System.Linq
+@model DarwinCMS.Application.DTOs.Menus.MenuNodeDto
+
+@functions {
+    string BuildUrl(DarwinCMS.Application.DTOs.Menus.MenuNodeDto n, string currentLang)
+        => !string.IsNullOrWhiteSpace(n.Url) ? n.Url!
+           : (!string.IsNullOrWhiteSpace(n.Slug)
+                ? Url.Action("Details", "Page", new { lang = currentLang, slug = n.Slug })!
+                : "#");
+
+    bool HasChildren(DarwinCMS.Application.DTOs.Menus.MenuNodeDto n)
+        => n.Children != null && n.Children.Count > 0;
+}
+
+@{
+    var currentLang = (ViewContext.RouteData.Values["lang"]?.ToString()) ?? "de";
+    var children = Model?.Children ?? Enumerable.Empty<DarwinCMS.Application.DTOs.Menus.MenuNodeDto>();
+}
+
+<nav class="navbar navbar-expand-lg">
+    <div class="container-fluid px-0">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainMenu" aria-controls="mainMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainMenu">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                @foreach (var child in children)
+                {
+                    var hasChildren = HasChildren(child);
+                    if (!hasChildren)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="@BuildUrl(child, currentLang)">@child.Title</a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="@BuildUrl(child, currentLang)" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                @child.Title
+                            </a>
+                            <ul class="dropdown-menu">
+                                @foreach (var sub in child.Children!)
+                                {
+                                    <li><a class="dropdown-item" href="@BuildUrl(sub, currentLang)">@sub.Title</a></li>
+                                }
+                            </ul>
+                        </li>
+                    }
+                }
+            </ul>
+        </div>
+    </div>
+</nav>

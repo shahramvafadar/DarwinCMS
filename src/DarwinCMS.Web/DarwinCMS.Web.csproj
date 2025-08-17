@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Areas\Admin\Controllers\" />
     <Folder Include="Areas\Admin\ViewModels\" />
-    <Folder Include="Controllers\" />
     <Folder Include="Areas\Member\Controllers\" />
     <Folder Include="Areas\Member\ViewModels\" />
     <Folder Include="Areas\Member\Views\Shared\" />
@@ -28,7 +28,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DarwinCMS.Application\DarwinCMS.Application.csproj" />
+    <ProjectReference Include="..\DarwinCMS.Domain\DarwinCMS.Domain.csproj" />
     <ProjectReference Include="..\DarwinCMS.Infrastructure\DarwinCMS.Infrastructure.csproj" />
+    <ProjectReference Include="..\DarwinCMS.Shared.UI\DarwinCMS.Shared.UI.csproj" />
+    <ProjectReference Include="..\DarwinCMS.Shared\DarwinCMS.Shared.csproj" />
   </ItemGroup>
 
 </Project>
